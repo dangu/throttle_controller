@@ -8,6 +8,7 @@ public:
   void init();
   void forward(int speed);
   void reverse(int speed);
+  void speed(int speed);
   void stop();
   
 private:

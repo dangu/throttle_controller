@@ -33,6 +33,23 @@ void Motor::reverse(int speed)
   analogWrite(_pwm, speed); 
 }
 
+void Motor::speed(int speed)
+{
+  if(speed>0)
+    {
+      digitalWrite(_en1, HIGH);
+      digitalWrite(_en2, LOW);
+      analogWrite(_pwm, speed);
+    }
+  else
+    {
+      digitalWrite(_en1, LOW);
+      digitalWrite(_en2, HIGH);
+      analogWrite(_pwm, -speed); 
+    }
+      
+      
+}
 /**@brief Stop motor by shorting the leads */
 void Motor::stop()
 {
