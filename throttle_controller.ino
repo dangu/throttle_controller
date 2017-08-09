@@ -34,7 +34,9 @@ void loop() {
   pos = analogRead(MOTOR_POS);
   if(pid.calculate((double)ref, (double)pos))
   {
-    u=-pid.getOutput();
+    u=-(int)pid.getOutput();
+    Serial.print("Setting speed to ");
+    Serial.println(u);
     motor.speed(u);
   }
 }

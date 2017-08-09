@@ -62,6 +62,10 @@ bool PID::calculate(double ref, double in)
       Serial.print(_I);
       Serial.print(" u: ");
       Serial.print(u);
+      Serial.print(" uLim: ");
+      Serial.print(_uLimited);
+      Serial.print(" T: ");
+      Serial.print(T);
       Serial.print("\n");
 
       _millisOld = millisNow;
