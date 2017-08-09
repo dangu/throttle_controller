@@ -2,8 +2,8 @@
 #include "pid.hpp"
 
 #define MOTOR_PWM 9
-#define MOTOR_A1  7
-#define MOTOR_A2  8
+#define MOTOR_A1  10
+#define MOTOR_A2  11
 #define MOTOR_POS 0
 
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);

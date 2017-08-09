@@ -12,7 +12,7 @@ void PID::init()
   _D = 0;
 
   _P_gain = 1;
-  _I_gain = 0.01;
+  _I_gain = 0.1;
   _D_gain = 0;
 
   _uMax = 250;
