@@ -19,33 +19,28 @@ void Motor::init()
   digitalWrite(_en2, LOW);
 }
 
-void Motor::forward(int speed)
+void Motor::forward(int spd)
 {
-  digitalWrite(_en1, HIGH);
-  digitalWrite(_en2, LOW);
-  analogWrite(_pwm, speed);
+  speed(spd);
 }
 
-void Motor::reverse(int speed)
+void Motor::reverse(int spd)
 {
-  digitalWrite(_en1, LOW);
-  digitalWrite(_en2, HIGH);
-  analogWrite(_pwm, speed); 
+  speed(-spd);
 }
 
-void Motor::speed(int speed)
+void Motor::speed(int spd)
 {
-  if(speed>0)
+  digitalWrite(_pwm,1);
+  if(spd>0)
     {
-      digitalWrite(_en1, HIGH);
+      analogWrite(_en1, spd);
       digitalWrite(_en2, LOW);
-      analogWrite(_pwm, speed);
     }
   else
     {
       digitalWrite(_en1, LOW);
-      digitalWrite(_en2, HIGH);
-      analogWrite(_pwm, -speed); 
+      analogWrite(_en2, spd);
     }
       
       

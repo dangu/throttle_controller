@@ -6,9 +6,11 @@ class PID
 public:
   PID();
   void init();
-  double calculate(double ref, double in);
+  bool calculate(double ref, double in);
+  double getOutput();
 
 private:
+  double _uLimited;
   double _P;
   double _I;
   double _D;
@@ -19,6 +21,9 @@ private:
 
   double _uMax;
   double _uMin;
+
+  int _millisOld;
+  int _sampleTime;
 };
 
   

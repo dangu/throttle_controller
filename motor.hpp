@@ -6,9 +6,9 @@ class Motor
 public:
   Motor(int pwm, int en1, int en2);
   void init();
-  void forward(int speed);
-  void reverse(int speed);
-  void speed(int speed);
+  void forward(int spd);
+  void reverse(int spd);
+  void speed(int spd);
   void stop();
   
 private:
