@@ -10,22 +10,21 @@ void PID::init()
   _P = 0;
   _I = 0;
   _D = 0;
+  _eOld = 0;
 
-  _P_gain = 0;
+  _P_gain = 4;
   _I_gain = 0.1;
-  _D_gain = 0;
+  _D_gain = 5;
 
-  _uMax = 250;
-  _uMin = -250;
+  _uMax = 255;
+  _uMin = -_uMax;
   _millisOld = millis();
-  _sampleTime = 100;
+  _sampleTime = 10;
 }
 
 bool PID::calculate(double ref, double in)
 {
   double e;
-  double u;
-
   int millisNow;
   int T;           //!< [ms] Actual sample time
 
@@ -37,38 +36,33 @@ bool PID::calculate(double ref, double in)
       e = in - ref;
 
       _P = e * _P_gain;
-      _I = _I + e * _I_gain;
+      _I = _I + e * _I_gain*T/1000.0;
+      _D = _D_gain*(e-_eOld);
 
-      u = _P + _I;
-      if (u > _uMax)
+      _u = _P + _I +_D;
+      if (_u > _uMax)
 	{
 	  _uLimited = _uMax;
 	}
-      else if (u < _uMin)
+      else if (_u < _uMin)
 	{
 	  _uLimited = _uMin;
 	}
       else
 	{
-	  _uLimited = u;
+	  _uLimited = _u;
 	}
 
 
-      _I = _I - (u - _uLimited);
+      //    _I = _I - 0.1*(u - _uLimited);
       
-      Serial.print("P: ");
-      Serial.print(_P);
-      Serial.print(" I: ");
-      Serial.print(_I);
-      Serial.print(" u: ");
-      Serial.print(u);
-      Serial.print(" uLim: ");
-      Serial.print(_uLimited);
-      Serial.print(" T: ");
-      Serial.print(T);
-      Serial.print("\n");
+      //  Serial.print("T ");
+      //  Serial.println(T);
+      debugPrint(ref, in);
+
 
       _millisOld = millisNow;
+      _eOld = e;
       return true; 
     }
   else
@@ -81,4 +75,23 @@ bool PID::calculate(double ref, double in)
 double PID::getOutput()
 {
   return _uLimited;
+}
+
+/** @brief Print some values for debugging */
+void PID::debugPrint(double ref, double in)
+{
+  Serial.print(ref);
+  Serial.print(" ");
+  Serial.print(in);
+  Serial.print(" ");
+  Serial.print(_P);
+  Serial.print(" ");
+  Serial.print(_I);
+  Serial.print(" ");
+  Serial.print(_D);
+  Serial.print(" ");
+  Serial.print(_u);
+  Serial.print(" ");
+  Serial.print(_uLimited);
+  Serial.print("\n");
 }

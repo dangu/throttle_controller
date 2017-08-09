@@ -40,7 +40,7 @@ void Motor::speed(int spd)
   else
     {
       digitalWrite(_en1, LOW);
-      analogWrite(_en2, spd);
+      analogWrite(_en2, -spd);
     }
       
       
