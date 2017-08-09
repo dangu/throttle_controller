@@ -3,6 +3,21 @@
 
 PID::PID()
 {
+	  _P = 0;
+	  _I = 0;
+	  _D = 0;
+	  _eOld = 0;
+	  _u = 0;
+	  _uLimited = 0;
+
+	  _P_gain = 4;
+	  _I_gain = 0.3;
+	  _D_gain = 5;
+
+	  _uMax = 255;
+	  _uMin = -_uMax;
+	  _millisOld = millis();
+	  _sampleTime = 10;
 }
 
 void PID::init()
@@ -13,10 +28,10 @@ void PID::init()
   _eOld = 0;
 
   _P_gain = 4;
-  _I_gain = 0.1;
+  _I_gain = 0;
   _D_gain = 5;
 
-  _uMax = 255;
+  _uMax = 150;
   _uMin = -_uMax;
   _millisOld = millis();
   _sampleTime = 10;
@@ -53,8 +68,15 @@ bool PID::calculate(double ref, double in)
 	  _uLimited = _u;
 	}
 
-
-      //    _I = _I - 0.1*(u - _uLimited);
+      if(_I<_uMin)
+      {
+    	  _I=_uMin;
+      }
+      else if(_I>_uMax)
+      {
+    	  _I = _uMax;
+      }
+      //_I = _I - (_u - _uLimited);
       
       //  Serial.print("T ");
       //  Serial.println(T);

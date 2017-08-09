@@ -4,7 +4,7 @@
 #define MOTOR_PWM 9
 #define MOTOR_A1  10
 #define MOTOR_A2  11
-#define MOTOR_POS 0
+#define MOTOR_POS (unsigned char)0
 
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
@@ -22,9 +22,10 @@ void loop() {
   static int ref = 500;
   int u;
   int t;
-  static int ct;
+  static unsigned int ct;
   static int tOld;
-  static int refList[] = {100,200,500,800};
+  static int refList[] = {100,200,300,200,100,800,100,800,700,690,680,670,660,650,645,640,635};
+  int stepTime=500;
   /*
   int pause = 300;
   motor.forward(speed);
@@ -38,14 +39,14 @@ void loop() {
   pos = analogRead(MOTOR_POS);
   if(pid.calculate((double)ref, (double)pos))
   {
-    double e=ref-pos;
-    if(abs(e)<10)
+    u=-(int)pid.getOutput();
+    // Stop motor if the output is small enough
+    if(abs(u)<40)
     {
       motor.stop();
     }
     else
     {
-      u=-(int)pid.getOutput();
       motor.speed(u);
     }
   }
@@ -61,7 +62,7 @@ void loop() {
   }
 
   t=millis();
-  if((t-tOld)>2000)
+  if((t-tOld)>stepTime)
   {
     ref = refList[ct];
 
