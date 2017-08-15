@@ -102,6 +102,10 @@ void loop() {
   }*/
 }
 
+/** @brief Interrupt callback at every pulse from the alternator 
+
+Approximately 2 pulses every 10 ms.
+*/
 void wInterrupt()
 {
 wCounter++;
