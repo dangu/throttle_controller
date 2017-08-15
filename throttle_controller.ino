@@ -6,8 +6,11 @@
 #define MOTOR_A2  11
 #define MOTOR_POS (unsigned char)1
 #define REF_IN    0
+#define W_INTERRUPT 0
 
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
+
+volatile uint32_t wCounter;
 
 PID pid;
 // the setup routine runs once when you press reset:
@@ -15,6 +18,7 @@ void setup() {
   Serial.begin(115200);
   motor.init();
   pid.init();
+  attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
 }
 
 // the loop routine runs over and over again forever:
@@ -28,6 +32,9 @@ void loop() {
   static int tOld;
   static int refList[] = {100,200,300,200,100,800,100,800,700,690,680,670,660,650,645,640,635};
   int stepTime=500;
+  uint32_t wCounterTemp;
+  static uint32_t wCounterTempOld;
+  int nEng;
   /*
   int pause = 300;
   motor.forward(speed);
@@ -57,9 +64,18 @@ void loop() {
       motor.speed(u);
     }
 
-    Serial.print(ref);
-    Serial.print(" ");
-    Serial.println(refIn);
+    noInterrupts();
+    wCounterTemp = wCounter;
+    interrupts();
+
+    nEng=wCounterTemp-wCounterTempOld;
+    wCounterTempOld=wCounterTemp;
+
+    Serial.println(nEng);
+//    Serial.print(" ");
+//    Serial.print(ref);
+//    Serial.print(" ");
+//    Serial.println(refIn);
   }
   
   if(Serial.available() > 0)
@@ -85,3 +101,9 @@ void loop() {
     tOld = t;
   }*/
 }
+
+void wInterrupt()
+{
+wCounter++;
+}
+
