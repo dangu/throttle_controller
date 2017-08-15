@@ -10,11 +10,11 @@ PID::PID()
 	  _u = 0;
 	  _uLimited = 0;
 
-	  _P_gain = 4;
-	  _I_gain = 0.3;
-	  _D_gain = 5;
+	  _P_gain = 0;
+	  _I_gain = 0;
+	  _D_gain = 0;
 
-	  _uMax = 255;
+	  _uMax = 0;
 	  _uMin = -_uMax;
 	  _millisOld = millis();
 	  _sampleTime = 10;
@@ -27,11 +27,11 @@ void PID::init()
   _D = 0;
   _eOld = 0;
 
-  _P_gain = 4;
+  _P_gain = 1;
   _I_gain = 0;
-  _D_gain = 5;
+  _D_gain = 0;
 
-  _uMax = 150;
+  _uMax = 100;
   _uMin = -_uMax;
   _millisOld = millis();
   _sampleTime = 10;
@@ -80,7 +80,7 @@ bool PID::calculate(double ref, double in)
       
       //  Serial.print("T ");
       //  Serial.println(T);
-      debugPrint(ref, in);
+      // debugPrint(ref, in);
 
 
       _millisOld = millisNow;

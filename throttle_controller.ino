@@ -4,7 +4,8 @@
 #define MOTOR_PWM 9
 #define MOTOR_A1  10
 #define MOTOR_A2  11
-#define MOTOR_POS (unsigned char)0
+#define MOTOR_POS (unsigned char)1
+#define REF_IN    0
 
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
@@ -20,6 +21,7 @@ void setup() {
 void loop() {
   int pos;
   static int ref = 500;
+  int refIn;  //!< Analog reference value input
   int u;
   int t;
   static unsigned int ct;
@@ -37,6 +39,11 @@ void loop() {
   motor.stop();
   delay(pause);*/
   pos = analogRead(MOTOR_POS);
+  refIn = analogRead(REF_IN);
+
+  ref = refIn-200;
+  ref = max(200,ref);
+  ref = min(800,ref);
   if(pid.calculate((double)ref, (double)pos))
   {
     u=-(int)pid.getOutput();
@@ -49,6 +56,10 @@ void loop() {
     {
       motor.speed(u);
     }
+
+    Serial.print(ref);
+    Serial.print(" ");
+    Serial.println(refIn);
   }
   
   if(Serial.available() > 0)
@@ -61,7 +72,7 @@ void loop() {
     Serial.println(ref, DEC);
   }
 
-  t=millis();
+ /* t=millis();
   if((t-tOld)>stepTime)
   {
     ref = refList[ct];
@@ -72,5 +83,5 @@ void loop() {
       ct=0;
     }
     tOld = t;
-  }
+  }*/
 }
