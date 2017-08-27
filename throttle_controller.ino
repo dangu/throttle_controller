@@ -84,8 +84,20 @@ void loop() {
     chr = Serial.read();
     Serial.print("Read ");
     Serial.println(chr);
-    ref = (chr-'0')*110;
-    Serial.println(ref, DEC);
+    switch(chr)
+    {
+      case 'R':
+        // Reset
+       // wdt_enable(WDTO_15MS);
+       // while(1) {};
+        break;
+
+      default:
+      Serial.println("Setting reference...");
+        ref = (chr-'0')*110;
+        Serial.println(ref, DEC);
+        break;
+    }
   }
 
  /* t=millis();
