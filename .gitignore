@@ -5,6 +5,7 @@
 
 # User-specific files
 *.suo
+*.atsuo
 *.user
 *.userosscache
 *.sln.docstates
