@@ -1,5 +1,13 @@
+/*End of auto generated code by Atmel studio */
+
 #include "motor.hpp"
 #include "pid.hpp"
+#include <avr/wdt.h>
+//Beginning of Auto generated function prototypes by Atmel Studio
+void wInterrupt();
+//End of Auto generated function prototypes by Atmel Studio
+
+
 
 #define MOTOR_PWM 9
 #define MOTOR_A1  10
@@ -13,12 +21,42 @@ Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 volatile uint32_t wCounter;
 
 PID pid;
+
+// The do_reboot is courtesy of this forum post:
+// https://github.com/Optiboot/optiboot/issues/180
+//
+// It seems 1023 has to match BOOTSZ fuse, as it sets
+// the size of the bootloader
+typedef void (*do_reboot_t)(void);
+const do_reboot_t do_reboot = (do_reboot_t)((FLASHEND-1023)>>1);
+
 // the setup routine runs once when you press reset:
 void setup() {
+//  wdt_disable();
+
   Serial.begin(115200);
+  Serial.print("MCUSR WDTCSR: ");
+  Serial.println(MCUSR, BIN);
+  Serial.println(WDTCSR, BIN);
+    cli();
+    wdt_reset();
+    /* Clear WDRF in MCUSR */
+  MCUSR &= ~(1<<WDRF);
+  /* Write logical one to WDCE and WDE */
+  /* Keep old prescaler serring to prevent unintentional time-out */
+  WDTCSR |=  (1<<WDCE) | (1<<WDE);
+  
+  /* Turn off WDT */
+  WDTCSR = 0x00;
+  sei();
+  Serial.println("After:");
+  Serial.println(MCUSR, BIN);
+  Serial.println(WDTCSR, BIN);
   motor.init();
   pid.init();
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
+    pinMode(LED_BUILTIN, OUTPUT);
+   
 }
 
 // the loop routine runs over and over again forever:
@@ -45,6 +83,15 @@ void loop() {
   delay(pause);
   motor.stop();
   delay(pause);*/
+
+  if((millis() % 1000)<100)
+  {
+  digitalWrite(LED_BUILTIN, HIGH);
+  }
+  else
+  {
+  digitalWrite(LED_BUILTIN, LOW);
+  }
   pos = analogRead(MOTOR_POS);
   refIn = analogRead(REF_IN);
 
@@ -71,7 +118,7 @@ void loop() {
     nEng=wCounterTemp-wCounterTempOld;
     wCounterTempOld=wCounterTemp;
 
-    Serial.println(nEng);
+ //   Serial.println(nEng);
 //    Serial.print(" ");
 //    Serial.print(ref);
 //    Serial.print(" ");
@@ -87,9 +134,15 @@ void loop() {
     switch(chr)
     {
       case 'R':
+    cli();
+    Serial.println("A");
+
+      MCUSR=0;
+      do_reboot();
+    Serial.println("B");
         // Reset
-       // wdt_enable(WDTO_15MS);
-       // while(1) {};
+      //  wdt_enable(WDTO_15MS);
+      //  while(1) {};
         break;
 
       default:
@@ -122,4 +175,5 @@ void wInterrupt()
 {
 wCounter++;
 }
+
 
