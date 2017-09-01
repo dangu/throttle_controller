@@ -5,6 +5,7 @@
 
 #include "motor.hpp"
 #include "pid.hpp"
+#include <avr/wdt.h>
 //Beginning of Auto generated function prototypes by Atmel Studio
 void wInterrupt();
 //End of Auto generated function prototypes by Atmel Studio
@@ -25,10 +26,31 @@ volatile uint32_t wCounter;
 PID pid;
 // the setup routine runs once when you press reset:
 void setup() {
-  Serial.begin(115200);
+//	wdt_disable();
+
+	Serial.begin(115200);
+	Serial.print("MCUSR WDTCSR: ");
+	Serial.println(MCUSR, BIN);
+	Serial.println(WDTCSR, BIN);
+    cli();
+    wdt_reset();
+    /* Clear WDRF in MCUSR */
+	MCUSR &= ~(1<<WDRF);
+	/* Write logical one to WDCE and WDE */
+	/* Keep old prescaler serring to prevent unintentional time-out */
+	WDTCSR |=  (1<<WDCE) | (1<<WDE);
+	
+	/* Turn off WDT */
+	WDTCSR = 0x00;
+	sei();
+	Serial.println("After:");
+	Serial.println(MCUSR, BIN);
+	Serial.println(WDTCSR, BIN);
   motor.init();
   pid.init();
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
+    pinMode(LED_BUILTIN, OUTPUT);
+	 
 }
 
 // the loop routine runs over and over again forever:
@@ -55,6 +77,15 @@ void loop() {
   delay(pause);
   motor.stop();
   delay(pause);*/
+
+  if((millis() % 1000)<100)
+  {
+	digitalWrite(LED_BUILTIN, HIGH);
+  }
+  else
+  {
+	digitalWrite(LED_BUILTIN, LOW);
+  }
   pos = analogRead(MOTOR_POS);
   refIn = analogRead(REF_IN);
 
@@ -81,7 +112,7 @@ void loop() {
     nEng=wCounterTemp-wCounterTempOld;
     wCounterTempOld=wCounterTemp;
 
-    Serial.println(nEng);
+ //   Serial.println(nEng);
 //    Serial.print(" ");
 //    Serial.print(ref);
 //    Serial.print(" ");
@@ -98,8 +129,8 @@ void loop() {
     {
       case 'R':
         // Reset
-       // wdt_enable(WDTO_15MS);
-       // while(1) {};
+        wdt_enable(WDTO_15MS);
+        while(1) {};
         break;
 
       default:
