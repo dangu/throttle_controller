@@ -5,14 +5,14 @@ DWEN = [ ]
 SPIEN = [X]
 WDTON = [ ]
 EESAVE = [ ]
-BOOTSZ = 1024W_3C00
+BOOTSZ = 256W_3F00
 BOOTRST = [X]
 CKDIV8 = [ ]
 CKOUT = [ ]
 SUT_CKSEL = EXTXOSC_8MHZ_XX_16KCK_14CK_65MS
 
 EXTENDED = 0xFD (valid)
-HIGH = 0xDA (valid)
+HIGH = 0xDE (valid)
 LOW = 0xFF (valid)
 
 Lock bits:
@@ -21,3 +21,29 @@ BLB0 = NO_LOCK
 BLB1 = LPM_SPM_DISABLE
 
 LOCKBIT = 0xCF (valid)
+
+Hex file info
+https://en.wikipedia.org/wiki/Intel_HEX
+------------------------------------------
+Byte count, address, record type, data, checksum
+:10 0000 00 0C945D000C9471030C944A030C948500 CD
+:10 77F0 00 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF 99
+:10 7800 00 0C94343C0C94513C0C94513C0C94513C E1
+:10 7FF0 00 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF 91
+:00 0000 01 FF
+
+Record type:
+00  Data
+01  End of file ( with byte count 00 and checksum FF)
+
+--------------------------------------------------
+- Original bootloader starts at 2047 bytes before flashend
+- Optiboot starts at 511 bytes before flashend
+- The start address is given from fuse bit HIGH.BOOTSZ
+in words:
+Words       Bytes
+Size Start  Size Start
+256  3F00   512  7E00
+512  3E00   1024 7C00
+1024 3C00   2048 7800
+2048 3800   4096 7000
