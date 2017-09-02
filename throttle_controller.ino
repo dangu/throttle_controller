@@ -1,4 +1,4 @@
-/*End of auto generated code by Atmel studio */
+ //*End of auto generated code by Atmel studio */
 
 #include "motor.hpp"
 #include "pid.hpp"
