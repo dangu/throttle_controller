@@ -9,7 +9,7 @@ class Flasher:
     def sendReset(self):
         """Send the reset command to the Arduino"""
         ser = serial.Serial('/dev/ttyUSB0')
-        ser.baudrate = 115200
+        ser.baudrate = 57600
         
         ser.write("R")
         ser.close()

@@ -34,7 +34,7 @@ const do_reboot_t do_reboot = (do_reboot_t)((FLASHEND-1023)>>1);
 void setup() {
 //  wdt_disable();
 
-  Serial.begin(115200);
+  Serial.begin(57600);
   Serial.print("MCUSR WDTCSR: ");
   Serial.println(MCUSR, BIN);
   Serial.println(WDTCSR, BIN);
@@ -84,7 +84,7 @@ void loop() {
   motor.stop();
   delay(pause);*/
 
-  if((millis() % 1000)<100)
+  if((millis() % 2000)<100)
   {
   digitalWrite(LED_BUILTIN, HIGH);
   }
@@ -134,6 +134,7 @@ void loop() {
     switch(chr)
     {
       case 'R':
+          motor.stop();  // Prevent motor runaway during reset
     cli();
     Serial.println("A");
 
