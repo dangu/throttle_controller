@@ -25,6 +25,9 @@ Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
 volatile uint32_t wCounter;
 volatile uint32_t wMicrosDiff;
+volatile uint32_t wMillisDiff;
+volatile uint32_t wMicrosNow;
+volatile uint32_t wMillisNow;
 
 PID pid;
 
@@ -77,8 +80,15 @@ void loop() {
   static int refList[] = {100,200,300,200,100,800,100,800,700,690,680,670,660,650,645,640,635};
   int stepTime=500;
   uint32_t wMicrosDiffTemp;
+  uint32_t wMillisDiffTemp;
+  uint32_t wMicrosNowTemp;
+  uint32_t wMillisNowTemp;
+  uint32_t wCounterTemp;
+  static uint32_t wCounterTempOld;
   static uint32_t millisOld;
   int nEng;
+  float refTemp;
+  static bool forceMotorStopped;
   /*
   int pause = 300;
   motor.forward(speed);
@@ -94,14 +104,19 @@ void loop() {
   pos = analogRead(MOTOR_POS);
   refIn = analogRead(REF_IN);
 
-  //ref = refIn-200;
-  //ref = max(200,ref);
-  //ref = min(800,ref);
+  // Min 518
+  // Max 907 875
+  // Max gas pedal 1023
+  refTemp = (refIn-518);
+  ref = 980-refTemp*1.37f;
+  ref = max(288,ref);
+  ref = min(980,ref);
   if(pid.calculate((double)ref, (double)pos))
   {
     u=-(int)pid.getOutput();
     // Stop motor if the output is small enough
-    if(abs(u)<40)
+    // or if user pressed '0'
+    if((abs(u)<40) || forceMotorStopped)
     {
       motor.stop();
     }
@@ -115,18 +130,42 @@ void loop() {
     // variables used inside the interrupt routine
     noInterrupts();
     wMicrosDiffTemp = wMicrosDiff;
+    wMillisDiffTemp = wMillisDiff;
+    wMillisNowTemp = wMillisNow;
+    wMicrosNowTemp = wMicrosNow;
+    wCounterTemp = wCounter;
     interrupts();
 
     if((millis()-millisOld)> 1000)
     {
+        nEng=wCounterTemp-wCounterTempOld;
+        wCounterTempOld=wCounterTemp;
+
+        /*
+         * Pulses:
+         * rpm	pulses per second
+         * 500	132
+         * 1000	720
+         * 1500	1133
+         * 1700 1287
+         *
+         */
     	digitalWrite(LED_BUILTIN, HIGH);
+    	Serial.print(nEng);
+    	Serial.print(" ");
     	Serial.print(wMicrosDiffTemp);
+    	Serial.print(" ");
+    	Serial.print(wMillisDiffTemp);
+    	Serial.print(" ");
+    	Serial.print(wMicrosNowTemp);
+    	Serial.print(" ");
+    	Serial.print(wMillisNowTemp);
+    	Serial.print(" ");
+    	Serial.print(refIn);
     	Serial.print(" ");
     	Serial.print(ref);
     	Serial.print(" ");
-    	Serial.print(pos);
-    	Serial.print(" ");
-    	Serial.println(millisOld);
+    	Serial.println(pos);
     	millisOld = millis();
     }
     else
@@ -157,10 +196,18 @@ void loop() {
     	//  while(1) {};
     	break;
 
+    case '0':
+    	// Turn off servo
+    	Serial.println("Stopping motor...");
+    	motor.stop();
+		forceMotorStopped = true;
+		break;
+
     default:
     	Serial.println("Setting reference...");
     	ref = (chr-'0')*110;
     	Serial.println(ref, DEC);
+    	forceMotorStopped = false;
     	break;
     }
   }
@@ -186,12 +233,16 @@ Approximately 2 pulses every 10 ms.
 void wInterrupt()
 {
 	static uint32_t microsOld;
-	uint32_t microsNow;
-	microsNow = micros();  // Timestamp now
-	wMicrosDiff = microsNow-microsOld;
+	static uint32_t millisOld;
+
+	wMicrosNow = micros();  // Timestamp now
+	wMillisNow = millis();
+	wMicrosDiff = wMicrosNow-microsOld;
+	wMillisDiff = wMillisNow-millisOld;
 	wCounter++;
 
-	microsOld = microsNow;
+	microsOld = wMicrosNow;
+	millisOld = wMillisNow;
 }
 
 
