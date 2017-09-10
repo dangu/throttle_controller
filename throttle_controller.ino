@@ -7,6 +7,11 @@
 void wInterrupt();
 //End of Auto generated function prototypes by Atmel Studio
 
+/**
+ * Motor calibration			Connected
+ * Idle position: 			980 980
+ * Full throttle position:	50	288
+ */
 
 
 #define MOTOR_PWM 9
@@ -19,6 +24,7 @@ void wInterrupt();
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
 volatile uint32_t wCounter;
+volatile uint32_t wMicrosDiff;
 
 PID pid;
 
@@ -34,7 +40,7 @@ const do_reboot_t do_reboot = (do_reboot_t)((FLASHEND-1023)>>1);
 void setup() {
 //  wdt_disable();
 
-  Serial.begin(57600);
+  Serial.begin(19200);
   Serial.print("MCUSR WDTCSR: ");
   Serial.println(MCUSR, BIN);
   Serial.println(WDTCSR, BIN);
@@ -70,8 +76,8 @@ void loop() {
   static int tOld;
   static int refList[] = {100,200,300,200,100,800,100,800,700,690,680,670,660,650,645,640,635};
   int stepTime=500;
-  uint32_t wCounterTemp;
-  static uint32_t wCounterTempOld;
+  uint32_t wMicrosDiffTemp;
+  static uint32_t millisOld;
   int nEng;
   /*
   int pause = 300;
@@ -84,20 +90,13 @@ void loop() {
   motor.stop();
   delay(pause);*/
 
-  if((millis() % 2000)<100)
-  {
-  digitalWrite(LED_BUILTIN, HIGH);
-  }
-  else
-  {
-  digitalWrite(LED_BUILTIN, LOW);
-  }
+
   pos = analogRead(MOTOR_POS);
   refIn = analogRead(REF_IN);
 
-  ref = refIn-200;
-  ref = max(200,ref);
-  ref = min(800,ref);
+  //ref = refIn-200;
+  //ref = max(200,ref);
+  //ref = min(800,ref);
   if(pid.calculate((double)ref, (double)pos))
   {
     u=-(int)pid.getOutput();
@@ -111,18 +110,30 @@ void loop() {
       motor.speed(u);
     }
 
+    // Critical region:
+    // The interrupts need to be turned off before reading the
+    // variables used inside the interrupt routine
     noInterrupts();
-    wCounterTemp = wCounter;
+    wMicrosDiffTemp = wMicrosDiff;
     interrupts();
 
-    nEng=wCounterTemp-wCounterTempOld;
-    wCounterTempOld=wCounterTemp;
+    if((millis()-millisOld)> 1000)
+    {
+    	digitalWrite(LED_BUILTIN, HIGH);
+    	Serial.print(wMicrosDiffTemp);
+    	Serial.print(" ");
+    	Serial.print(ref);
+    	Serial.print(" ");
+    	Serial.print(pos);
+    	Serial.print(" ");
+    	Serial.println(millisOld);
+    	millisOld = millis();
+    }
+    else
+    {
+    	digitalWrite(LED_BUILTIN, LOW);
+    }
 
- //   Serial.println(nEng);
-//    Serial.print(" ");
-//    Serial.print(ref);
-//    Serial.print(" ");
-//    Serial.println(refIn);
   }
   
   if(Serial.available() > 0)
@@ -133,24 +144,24 @@ void loop() {
     Serial.println(chr);
     switch(chr)
     {
-      case 'R':
-          motor.stop();  // Prevent motor runaway during reset
-    cli();
-    Serial.println("A");
+    case 'R':
+    	motor.stop();  // Prevent motor runaway during reset
+    	cli();
+    	Serial.println("A");
 
-      MCUSR=0;
-      do_reboot();
-    Serial.println("B");
-        // Reset
-      //  wdt_enable(WDTO_15MS);
-      //  while(1) {};
-        break;
+    	MCUSR=0;
+    	do_reboot();
+    	Serial.println("B");
+    	// Reset
+    	//  wdt_enable(WDTO_15MS);
+    	//  while(1) {};
+    	break;
 
-      default:
-      Serial.println("Setting reference...");
-        ref = (chr-'0')*110;
-        Serial.println(ref, DEC);
-        break;
+    default:
+    	Serial.println("Setting reference...");
+    	ref = (chr-'0')*110;
+    	Serial.println(ref, DEC);
+    	break;
     }
   }
 
@@ -174,7 +185,13 @@ Approximately 2 pulses every 10 ms.
 */
 void wInterrupt()
 {
-wCounter++;
+	static uint32_t microsOld;
+	uint32_t microsNow;
+	microsNow = micros();  // Timestamp now
+	wMicrosDiff = microsNow-microsOld;
+	wCounter++;
+
+	microsOld = microsNow;
 }
 
 
