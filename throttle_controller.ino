@@ -28,6 +28,10 @@ volatile uint32_t wMicrosDiff;
 volatile uint32_t wMillisDiff;
 volatile uint32_t wMicrosNow;
 volatile uint32_t wMillisNow;
+volatile uint16_t wMicrosDiffList[10];
+volatile uint16_t wMicrosDiffList2[10];
+volatile uint16_t *wMicrosDiffListPtr=wMicrosDiffList;
+volatile uint16_t *wMicrosDiffListPtrToPrint;
 
 PID pid;
 
@@ -129,11 +133,23 @@ void loop() {
     // The interrupts need to be turned off before reading the
     // variables used inside the interrupt routine
     noInterrupts();
-    wMicrosDiffTemp = wMicrosDiff;
+/*    wMicrosDiffTemp = wMicrosDiff;
     wMillisDiffTemp = wMillisDiff;
     wMillisNowTemp = wMillisNow;
     wMicrosNowTemp = wMicrosNow;
-    wCounterTemp = wCounter;
+    wCounterTemp = wCounter;*/
+
+    // Double buffered list
+    if(wMicrosDiffListPtr == wMicrosDiffList)
+    {
+    	wMicrosDiffListPtr = wMicrosDiffList2;
+    	wMicrosDiffListPtrToPrint = wMicrosDiffList;
+    }
+    else
+    {
+    	wMicrosDiffListPtr = wMicrosDiffList;
+    	wMicrosDiffListPtrToPrint = wMicrosDiffList2;
+    }
     interrupts();
 
     if((millis()-millisOld)> 1000)
@@ -151,7 +167,7 @@ void loop() {
          *
          */
     	digitalWrite(LED_BUILTIN, HIGH);
-    	Serial.print(nEng);
+/*    	Serial.print(nEng);
     	Serial.print(" ");
     	Serial.print(wMicrosDiffTemp);
     	Serial.print(" ");
@@ -165,7 +181,13 @@ void loop() {
     	Serial.print(" ");
     	Serial.print(ref);
     	Serial.print(" ");
-    	Serial.println(pos);
+    	Serial.println(pos);*/
+    	for(int i=0;i<10;i++)
+    	{
+    		Serial.print(wMicrosDiffListPtrToPrint[i]);
+    		Serial.print(" ");
+    	}
+    	Serial.println("");
     	millisOld = millis();
     }
     else
@@ -234,11 +256,15 @@ void wInterrupt()
 {
 	static uint32_t microsOld;
 	static uint32_t millisOld;
+	static uint8_t listPos;
 
 	wMicrosNow = micros();  // Timestamp now
 	wMillisNow = millis();
 	wMicrosDiff = wMicrosNow-microsOld;
 	wMillisDiff = wMillisNow-millisOld;
+	wMicrosDiffListPtr[listPos] = wMicrosDiff;
+	if(++listPos>9)
+		listPos=0;
 	wCounter++;
 
 	microsOld = wMicrosNow;
