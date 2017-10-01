@@ -90,7 +90,7 @@ void loop() {
   uint32_t wCounterTemp;
   static uint32_t wCounterTempOld;
   static uint32_t millisOld;
-  int nEng;
+  float nEng;
   float refTemp;
   static bool forceMotorStopped;
   /*
@@ -139,6 +139,15 @@ void loop() {
     wMicrosNowTemp = wMicrosNow;
     wCounterTemp = wCounter;*/
 
+    if(wMicrosDiff == 0)
+    {
+    	nEng=0;
+    }
+    else
+    {
+    	nEng=4*1000000/wMicrosDiff;
+    }
+
     // Double buffered list
     if(wMicrosDiffListPtr == wMicrosDiffList)
     {
@@ -154,7 +163,7 @@ void loop() {
 
     if((millis()-millisOld)> 1000)
     {
-        nEng=wCounterTemp-wCounterTempOld;
+
         wCounterTempOld=wCounterTemp;
 
         /*
@@ -181,13 +190,15 @@ void loop() {
     	Serial.print(" ");
     	Serial.print(ref);
     	Serial.print(" ");
-    	Serial.println(pos);*/
+    	Serial.println(pos);
     	for(int i=0;i<10;i++)
     	{
     		Serial.print(wMicrosDiffListPtrToPrint[i]);
     		Serial.print(" ");
     	}
-    	Serial.println("");
+    	*/
+    	Serial.println(nEng);
+    //	Serial.println("");
     	millisOld = millis();
     }
     else
