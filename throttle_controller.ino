@@ -34,6 +34,7 @@ volatile uint16_t *wMicrosDiffListPtr=wMicrosDiffList;
 volatile uint16_t *wMicrosDiffListPtrToPrint;
 
 PID pid;
+PID pid_n_eng;
 
 // The do_reboot is courtesy of this forum post:
 // https://github.com/Optiboot/optiboot/issues/180
@@ -67,6 +68,9 @@ void setup() {
   Serial.println(WDTCSR, BIN);
   motor.init();
   pid.init();
+  pid_n_eng.init();
+  pid_n_eng.setPGain(0.1);
+
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);
    
@@ -76,6 +80,7 @@ void setup() {
 void loop() {
   int pos;
   static int ref = 500;
+  static int refSerial = 800; //!< rpm value from serial input
   int refIn;  //!< Analog reference value input
   int u;
   int t;
@@ -92,6 +97,7 @@ void loop() {
   static uint32_t millisOld;
   float nEng;
   float refTemp;
+  static float u_pid_n_eng=50;
   static bool forceMotorStopped;
   /*
   int pause = 300;
@@ -104,6 +110,17 @@ void loop() {
   motor.stop();
   delay(pause);*/
 
+  // Calculate output of engine speed PID
+  //
+  // Min servo=980
+  // Max servo=288
+  if(pid_n_eng.calculate((double)refSerial, (double)nEng))
+  {
+	  u_pid_n_eng = pid_n_eng.getOutput();
+
+  }
+
+  ref = 980-ref*6.92f;
 
   pos = analogRead(MOTOR_POS);
   refIn = analogRead(REF_IN);
@@ -112,12 +129,13 @@ void loop() {
   // Max 907 875
   // Max gas pedal 1023
   refTemp = (refIn-518);
-  ref = 980-refTemp*1.37f;
+  //ref = 980-refTemp*1.37f;
+  ref=980-100*6.92f;
   ref = max(288,ref);
   ref = min(980,ref);
   if(pid.calculate((double)ref, (double)pos))
   {
-    u=-(int)pid.getOutput();
+    u=(int)pid.getOutput();
     // Stop motor if the output is small enough
     // or if user pressed '0'
     if((abs(u)<40) || forceMotorStopped)
@@ -161,7 +179,7 @@ void loop() {
     }
     interrupts();
 
-    if((millis()-millisOld)> 1000)
+    if((millis()-millisOld)> 100)
     {
 
         wCounterTempOld=wCounterTemp;
@@ -197,8 +215,14 @@ void loop() {
     		Serial.print(" ");
     	}
     	*/
-    	Serial.println(nEng);
-    //	Serial.println("");
+    	Serial.print(nEng);
+    	Serial.print(" ");
+    	Serial.print(u_pid_n_eng);
+    	Serial.print(" ");
+    	Serial.print(ref);
+    	Serial.print(" ");
+    	Serial.print(refSerial);
+    	Serial.println("");
     	millisOld = millis();
     }
     else
@@ -238,8 +262,8 @@ void loop() {
 
     default:
     	Serial.println("Setting reference...");
-    	ref = (chr-'0')*110;
-    	Serial.println(ref, DEC);
+    	refSerial = 500+(chr-'0')*200;
+    	Serial.println(refSerial, DEC);
     	forceMotorStopped = false;
     	break;
     }

@@ -48,7 +48,7 @@ bool PID::calculate(double ref, double in)
   // Tsample is the desired sample time
   if(T >= _sampleTime)
     {
-      e = in - ref;
+      e = ref - in;
 
       _P = e * _P_gain;
       _I = _I + e * _I_gain*T/1000.0;
@@ -116,4 +116,9 @@ void PID::debugPrint(double ref, double in)
   Serial.print(" ");
   Serial.print(_uLimited);
   Serial.print("\n");
+}
+
+void PID::setPGain(double P)
+{
+	_P_gain = P;
 }
