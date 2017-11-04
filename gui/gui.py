@@ -1,25 +1,30 @@
 import Tkinter as tk
+import serial
+
+class Sercom(serial.Serial):
+    def __init__(self, port):
+        """Init"""
+        serial.Serial.__init__(self)
+        self.port = port
+
+
 
 def run():
     """Run graphics"""
-    top = Tkinter.Tk()
+    top = tk.Tk()
     
 
     filename = r"../game/src/test.chr"
     
-    # Load a group of tiles from file
-    tileGroup.loadFromFile(filename) 
+    C = tk.Canvas(top, width=150, height=150)
+    C.pack()
     
-    # Set the colors to use with the tiles
-    palette = Palette()
-    palette.setColors(['black', 'green', 'yellow', 'grey'])
-    
-    nTilesX = 16
-    nTilesY = 32
-    xScale  = 3
-    yScale = xScale
-    C = Tkinter.Canvas(top, bg="grey", width=8*nTilesX*xScale, height=8*nTilesY*yScale, cursor = "crosshair")
-    p = CanvasPlotter(C)
-    p.setScale(xScale, yScale)
-    
-xOffset=0
+    tk.mainloop()
+
+if __name__=="__main__":
+    ser = Sercom("/dev/ttyUSB0")
+    ser.baudrate = 19200
+    ser.open()
+    while(True):
+        print ser.readline()
+#    run()
