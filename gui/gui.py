@@ -1,19 +1,78 @@
 import Tkinter as tk
 import serial
+
 from wx.lib.agw.balloontip import BT_LEAVE
 
 class Sercom(serial.Serial):
-    def __init__(self, port):
+    def __init__(self, port, baudrate):
         """Init"""
         serial.Serial.__init__(self)
         self.port = port
+        self.baudrate = baudrate
 
-class Gui:
-    def __init__(self):
-        self.root = tk.Tk()
+class Gui(tk.Frame):
+    def __init__(self, parent, title, serialPort):
+        """Init"""
+        tk.Frame.__init__(self, parent)
+        self.serialPort = serialPort
+        
+        self.btnSerial=tk.Button(parent, text="Open serial port", command=self.cbOpenCloseSerialPort)
+        self.btnSerial.grid(row=0,column=0)
 
+        self.btnReadSerial=tk.Button(parent, text="Read serial port", command=self.cbReadSerialPort)
+        self.btnReadSerial.grid(row=0,column=1)
+        
+        self.scale1 = tk.Scale(parent, command = self.cbScale1)
+        self.scale1.grid(row=1, column=0)
+        
+         
+    def cbOpenCloseSerialPort(self):
+        """Open or close serial port"""
+        if self.serialPort.isOpen():
+            self.serialPort.close()
+            self.btnSerial['text'] = "Open serial port"
+        else:
+            self.serialPort.open()
+            self.btnSerial['text'] = "Close serial port"
+
+    def cbReadSerialPort(self):
+        """Read serial port"""
+        if self.serialPort.isOpen():
+            if self.serialPort.inWaiting() != 0:
+                line = self.serialPort.readline()
+                print line.strip()
+            
+            self.after(10, self.cbReadSerialPort)
+        
+    def cbScale1(self, var2):
+        """Callback for scale 1"""
+        print "Value {}".format(var2)
+        
+    def read_serial(self):
+        """
+        Check for input from the serial port. On fetching a line, parse
+        the sensor values and append to the stored data and post a replot
+        request.
+        """
+        if self.serialPort.inWaiting() != 0:
+            line = self.serialPort.readline()
+            line = line.decode('ascii').strip("\r\n")
+            if line[0:3] != "MAG":
+                print(line) # line not a valid sensor result.
+            else:
+                try:
+                    data = line.split("\t")
+                    x, y, z = data[1], data[2], data[3]
+                    self.append_values(x, y, z)
+                    self.after_idle(self.replot)
+                except Exception as e:
+                    print(e)
+        self.after(10, self.read_serial)
+
+class Debug:
+    def __init__(self, parent):
     # create a Frame for the Text and Scrollbar
-        txt_frm = tk.Frame(self.root, width=600, height=600)
+        txt_frm = tk.Frame(parent, width=600, height=600)
         txt_frm.pack(fill="both", expand=True)
         # ensure a consistent GUI size
         txt_frm.grid_propagate(False)
@@ -72,16 +131,16 @@ class Gui:
        
     def initSerial(self):
         """Init serial communication"""
-        self.ser = Sercom("/dev/ttyUSB0")
-        self.ser.baudrate = 19200
+
         self.ser.open()
 
 
 def run():
     """Run graphics"""
-    gui=Gui()
-    gui.initSerial()
-    tk.mainloop()
+    root = tk.Tk()
+    app = Gui(root, "Throttle controller", Sercom("/dev/ttyUSB0", 19200))
+    #app.read_serial()
+    app.mainloop()
 
 if __name__=="__main__":
     run()
