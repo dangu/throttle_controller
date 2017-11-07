@@ -1,6 +1,7 @@
 import serial
 import subprocess
 import time
+import tkFileDialog
         
 class Flasher:
     def __init__(self):
@@ -22,21 +23,21 @@ class Flasher:
       #  print ser.read_all()
       #  ser.close()
      
-    def flash(self):
-        buildDir = "/tmp/arduino_build_188983"
+    def flash(self, filename):
+        """Flash the specified hex file"""
 
         avrdudeCmd = ['avrdude', '-c', 'arduino', '-b', '57600',
                      '-P', '/dev/ttyUSB0', '-p',
                      'atmega328p', '-vv', '-U',
-                     'flash:w:%s/throttle_controller.ino.hex:i' % buildDir]
+                     'flash:w:%s:i' % filename]
 
-        avrdudeCmd = ['./flash.sh']
-        print " ".join(avrdudeCmd)
-        proc = subprocess.Popen(avrdudeCmd,
+        avrdudeCmdJoined = " ".join(avrdudeCmd)
+        print avrdudeCmdJoined
+        proc = subprocess.Popen(avrdudeCmdJoined,
                              #   stdout=file_out, stderr=subprocess.PIPE)
                                 stdout=subprocess.PIPE, shell=True)
         log_string = ""
-      # output log of what happened (log_string is the var that is bound to the status label at the bottom of the GUI)
+        # output log of what happened (log_string is the var that is bound to the status label at the bottom of the GUI)
         proc.wait()
         avrdude_err = proc.communicate()[1]
         
@@ -72,6 +73,14 @@ class Flasher:
     
 if __name__ == "__main__":
    # for i in range(0,20,2):
+    buildDir = "/tmp/arduino_build_188983"
+    filename = buildDir + "/throttle_controller.ino.hex"
+    
+    filename = tkFileDialog.askopenfilename(initialdir = "/tmp",
+                                            title = "Select hex file",
+                                            filetypes =(("hex files", "*.hex")
+                                                            ,("all files","*.*")))
+
     sleeptime=0
     print "Sending reset"
     flasher = Flasher()
@@ -79,6 +88,6 @@ if __name__ == "__main__":
     print "Should now reset"
     print "Sleepint %.1f and then flashing" %sleeptime
     time.sleep(sleeptime)
-    flasher.flash()
+    flasher.flash(filename)
     print "Ready?"
 

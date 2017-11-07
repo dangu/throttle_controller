@@ -1,7 +1,8 @@
 import Tkinter as tk
 import serial
-
-from wx.lib.agw.balloontip import BT_LEAVE
+import flash
+import tkFileDialog
+import time
 
 class Settings:
     pass
@@ -32,6 +33,12 @@ class Gui(tk.Frame):
         self.btnReadSerial=tk.Button(parent, text="Read serial port", command=self.cbReadSerialPort)
         self.btnReadSerial.grid(row=0,column=1)
         
+        btnReset = tk.Button(parent, text="Reset", command=self.cbReset)
+        btnReset.grid(row=0, column=2, sticky="nsew", padx=2, pady=2)
+
+        btnFlash = tk.Button(parent, text="Flash", command=self.cbFlash)
+        btnFlash.grid(row=0, column=3, sticky="nsew", padx=2, pady=2)
+
         self.scaleRpmTarget = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, tickinterval=100, command = self.cbScale1)
         self.scaleRpmTarget.set(settings.rpmStart)
         self.scaleRpmTarget.grid(row=1, column=0)
@@ -65,6 +72,24 @@ class Gui(tk.Frame):
         """Callback for scale 1"""
         print "Value {}".format(var2)
         
+    def cbReset(self):
+        """Send a reset command"""
+        if self.serialPort.isOpen():
+            self.serialPort.write("R")
+
+    def cbFlash(self):
+        """Flash with new software"""
+        if self.serialPort.isOpen():
+            filename = tkFileDialog.askopenfilename(initialdir = "/tmp",title = "Select hex file",filetypes =(("hex files", "*.hex")
+                                                                                                    ,("all files","*.*")))
+
+            if filename:
+                self.cbReset()
+               # self.serialPort.close() # Need to close serial port before flashing
+                flash.Flasher().flash(filename)
+                print self.serialPort.baudrate
+                
+           
     def read_serial(self):
         """
         Check for input from the serial port. On fetching a line, parse
