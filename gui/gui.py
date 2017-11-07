@@ -3,6 +3,16 @@ import serial
 
 from wx.lib.agw.balloontip import BT_LEAVE
 
+class Settings:
+    pass
+
+settings = Settings()
+settings.rpmMax     = 2500
+settings.rpmMin     = 400
+settings.rpmStart   = 800
+settings.servoMax   = 100
+settings.servoMin   = 0
+
 class Sercom(serial.Serial):
     def __init__(self, port, baudrate):
         """Init"""
@@ -22,8 +32,15 @@ class Gui(tk.Frame):
         self.btnReadSerial=tk.Button(parent, text="Read serial port", command=self.cbReadSerialPort)
         self.btnReadSerial.grid(row=0,column=1)
         
-        self.scale1 = tk.Scale(parent, command = self.cbScale1)
-        self.scale1.grid(row=1, column=0)
+        self.scaleRpmTarget = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, tickinterval=100, command = self.cbScale1)
+        self.scaleRpmTarget.set(settings.rpmStart)
+        self.scaleRpmTarget.grid(row=1, column=0)
+        
+        self.scaleRpmMeasured = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, command = self.cbScale1)
+        self.scaleRpmMeasured.grid(row=1, column=1)
+
+        self.scaleServoPosMeasured = tk.Scale(parent,  from_=settings.servoMax, to=settings.servoMin, length=500, command = self.cbScale1)
+        self.scaleServoPosMeasured.grid(row=1, column=2)
         
          
     def cbOpenCloseSerialPort(self):
