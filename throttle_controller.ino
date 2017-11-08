@@ -2,6 +2,7 @@
 
 #include "motor.hpp"
 #include "pid.hpp"
+#include "comm.hpp"
 #include <avr/wdt.h>
 //Beginning of Auto generated function prototypes by Atmel Studio
 void wInterrupt();
@@ -99,6 +100,9 @@ void loop() {
   float refTemp;
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
+
+  static uint8_t rxBuf[20];
+  static uint8_t rxBufIn;
   /*
   int pause = 300;
   motor.forward(speed);
@@ -215,14 +219,14 @@ void loop() {
     		Serial.print(" ");
     	}
     	*/
-    	Serial.print(nEng);
+/*    	Serial.print(nEng);
     	Serial.print(" ");
     	Serial.print(u_pid_n_eng);
     	Serial.print(" ");
     	Serial.print(ref);
     	Serial.print(" ");
     	Serial.print(refSerial);
-    	Serial.println("");
+    	Serial.println("");*/
     	millisOld = millis();
     }
     else
@@ -236,8 +240,7 @@ void loop() {
   {
     char chr;
     chr = Serial.read();
-    Serial.print("Read ");
-    Serial.println(chr);
+
     switch(chr)
     {
     case 'R':
@@ -261,10 +264,22 @@ void loop() {
 		break;
 
     default:
-    	Serial.println("Setting reference...");
-    	refSerial = 500+(chr-'0')*200;
-    	Serial.println(refSerial, DEC);
-    	forceMotorStopped = false;
+    	if(rxBufIn>=(sizeof(rxBuf)-1))
+    	{
+    		Serial.println("Rx buffer overflow!");
+    		rxBufIn = 0;
+    	}
+
+    	rxBuf[rxBufIn++] = chr;
+
+    	if(chr == '\n')
+    	{
+    		rxBuf[rxBufIn] = '\0';	// End the string
+    		// Handle command
+    		handleCommand(rxBuf);
+    		rxBufIn = 0;
+    	}
+
     	break;
     }
   }

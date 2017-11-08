@@ -3,6 +3,7 @@ import serial
 import flash
 import tkFileDialog
 import time
+import os
 
 class Settings:
     pass
@@ -26,6 +27,7 @@ class Gui(tk.Frame):
         """Init"""
         tk.Frame.__init__(self, parent)
         self.serialPort = serialPort
+        self.initialHexFileDir = r"/tmp"
         
         self.btnSerial=tk.Button(parent, text="Open serial port", command=self.cbOpenCloseSerialPort)
         self.btnSerial.grid(row=0,column=0)
@@ -80,14 +82,19 @@ class Gui(tk.Frame):
     def cbFlash(self):
         """Flash with new software"""
         if self.serialPort.isOpen():
-            filename = tkFileDialog.askopenfilename(initialdir = "/tmp",title = "Select hex file",filetypes =(("hex files", "*.hex")
-                                                                                                    ,("all files","*.*")))
+            filename = tkFileDialog.askopenfilename(initialdir = self.initialHexFileDir
+                                                    ,title = "Select hex file",
+                                                    filetypes =(("hex files", "*.hex")
+                                                               ,("all files","*.*")))
 
             if filename:
                 self.cbReset()
-               # self.serialPort.close() # Need to close serial port before flashing
+                # self.serialPort.close() # Need to close serial port before flashing
                 flash.Flasher().flash(filename)
                 print self.serialPort.baudrate
+                
+                # Save the directory for opening the next time
+                self.initialHexFileDir = os.path.dirname(filename)
                 
            
     def read_serial(self):
