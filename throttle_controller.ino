@@ -37,13 +37,9 @@ volatile uint16_t *wMicrosDiffListPtrToPrint;
 PID pid;
 PID pid_n_eng;
 
-// The do_reboot is courtesy of this forum post:
-// https://github.com/Optiboot/optiboot/issues/180
-//
-// It seems 1023 has to match BOOTSZ fuse, as it sets
-// the size of the bootloader
-typedef void (*do_reboot_t)(void);
-const do_reboot_t do_reboot = (do_reboot_t)((FLASHEND-1023)>>1);
+status_t	status;
+
+
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -243,19 +239,6 @@ void loop() {
 
     switch(chr)
     {
-    case 'R':
-    	motor.stop();  // Prevent motor runaway during reset
-    	cli();
-    	Serial.println("A");
-
-    	MCUSR=0;
-    	do_reboot();
-    	Serial.println("B");
-    	// Reset
-    	//  wdt_enable(WDTO_15MS);
-    	//  while(1) {};
-    	break;
-
     case '0':
     	// Turn off servo
     	Serial.println("Stopping motor...");
