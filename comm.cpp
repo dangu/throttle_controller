@@ -15,7 +15,6 @@ void handleCommand(uint8_t rxBuf[])
 {
 	char delimiter[] = " ";
 	char *cmd, *strData;
-	Serial.println("Handling command...");
 	float data[5];
 	uint8_t nData=0;
 
@@ -60,6 +59,7 @@ void handleCommand(uint8_t rxBuf[])
 			// Enable external servo position
 			status.servoPosExtEnable = true;
 			status.servoPosExt_f = data[0];
+			Serial.println("OK");
 		}
 		else
 		{
@@ -80,6 +80,7 @@ void handleCommand(uint8_t rxBuf[])
 			pid_servo.setPGain(data[0]);
 			pid_servo.setIGain(data[1]);
 			pid_servo.setDGain(data[2]);
+			Serial.println("OK");
 		}
 		else
 		{
@@ -94,6 +95,7 @@ void handleCommand(uint8_t rxBuf[])
 			pid_n_eng.setPGain(data[0]);
 			pid_n_eng.setIGain(data[1]);
 			pid_n_eng.setDGain(data[2]);
+			Serial.println("OK");
 		}
 		else
 		{
@@ -104,10 +106,4 @@ void handleCommand(uint8_t rxBuf[])
 	default:
 		break;
 	}
-
-	for(int i=0;i<nData;i++)
-	{
-		Serial.println(data[i]*2);
-	}
-
 }

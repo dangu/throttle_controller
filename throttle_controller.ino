@@ -239,12 +239,12 @@ void loop() {
 
     switch(chr)
     {
-    case '0':
+ /*   case '0':
     	// Turn off servo
     	Serial.println("Stopping motor...");
     	motor.stop();
 		forceMotorStopped = true;
-		break;
+		break;*/
 
     default:
     	if(rxBufIn>=(sizeof(rxBuf)-1))

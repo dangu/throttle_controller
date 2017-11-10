@@ -15,12 +15,21 @@ settings.rpmStart   = 800
 settings.servoMax   = 100
 settings.servoMin   = 0
 
+# Serial commands understood by the control unit
+CMD_ENABLE_EXT_N_ENG        = 'a'
+CMD_DISABLE_EXT_N_ENG       = 'b'
+CMD_ENABLE_EXT_SERVO_POS    = 'c'
+CMD_DISABLE_EXT_SERVO_POS   = 'd'
+CMD_SET_PID_SERVO           = 'e'
+CMD_SET_PID_N_ENG           = 'f'
+
 class Sercom(serial.Serial):
     def __init__(self, port, baudrate):
         """Init"""
         serial.Serial.__init__(self)
         self.port = port
         self.baudrate = baudrate
+        self.timeout = 1
 
 class Gui(tk.Frame):
     def __init__(self, parent, title, serialPort):
@@ -61,38 +70,38 @@ class Gui(tk.Frame):
         
         # PID values
         spinboxWidth = 5
-        spinPidServoP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidServoP.grid(row=3, column=1)
-        spinPidServoP.delete(0,"end")
-        spinPidServoP.insert(tk.END,"0")
- 
-        spinPidServoI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidServoI.grid(row=3, column=2)
-        spinPidServoI.delete(0,"end")
-        spinPidServoI.insert(tk.END,"0")
-  
-        spinPidServoD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidServoD.grid(row=3, column=3)
-        spinPidServoD.delete(0,"end")
-        spinPidServoD.insert(tk.END,"0")
+        self.spinPidServoP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidServoP.grid(row=3, column=1)
+        self.spinPidServoP.delete(0,"end")
+        self.spinPidServoP.insert(tk.END,"0")
+
+        self.spinPidServoI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidServoI.grid(row=3, column=2)
+        self.spinPidServoI.delete(0,"end")
+        self.spinPidServoI.insert(tk.END,"0")
+
+        self.spinPidServoD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidServoD.grid(row=3, column=3)
+        self.spinPidServoD.delete(0,"end")
+        self.spinPidServoD.insert(tk.END,"0")
          
         btnSetPidServo = tk.Button(framePID, text="Set", command=self.cbSetPidServo)
         btnSetPidServo.grid(row=3, column=4, sticky="nsew", padx=2, pady=2)
 
-        spinPidNEngP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidNEngP.grid(row=4, column=1)
-        spinPidNEngP.delete(0,"end")
-        spinPidNEngP.insert(tk.END,"0")
-          
-        spinPidNEngI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidNEngI.grid(row=4, column=2)
-        spinPidNEngI.delete(0,"end")
-        spinPidNEngI.insert(tk.END,"0")
+        self.spinPidNEngP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidNEngP.grid(row=4, column=1)
+        self.spinPidNEngP.delete(0,"end")
+        self.spinPidNEngP.insert(tk.END,"0")
         
-        spinPidNEngD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
-        spinPidNEngD.grid(row=4, column=3)
-        spinPidNEngD.delete(0,"end")
-        spinPidNEngD.insert(tk.END,"0")
+        self.spinPidNEngI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidNEngI.grid(row=4, column=2)
+        self.spinPidNEngI.delete(0,"end")
+        self.spinPidNEngI.insert(tk.END,"0")
+        
+        self.spinPidNEngD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        self.spinPidNEngD.grid(row=4, column=3)
+        self.spinPidNEngD.delete(0,"end")
+        self.spinPidNEngD.insert(tk.END,"0")
 
         btnSetPidNEng = tk.Button(framePID, text="Set", command=self.cbSetPidNEng)
         btnSetPidNEng.grid(row=4, column=4, sticky="nsew", padx=2, pady=2)
@@ -123,8 +132,9 @@ class Gui(tk.Frame):
         """Read serial port"""
         if self.serialPort.isOpen():
             if self.serialPort.inWaiting() != 0:
+                print "Waiting..."
                 line = self.serialPort.readline()
-                print line.strip()
+                print "Rx: {}".format(line.strip())
             
             self.after(10, self.cbReadSerialPort)
         
@@ -156,18 +166,31 @@ class Gui(tk.Frame):
                 
     def cbSetPidServo(self):
         """Set the values for the servo PID"""
-        print "Set servo PID values"
+        if(self.serialPort.isOpen()):
+            print "Set servo PID values"
+            cmd = "{} {} {} {}\n".format(CMD_SET_PID_SERVO,
+                                       self.spinPidServoP.get(),
+                                       self.spinPidServoI.get(),
+                                       self.spinPidServoD.get())
+            self.serialPort.write(cmd)
   
     def cbSetPidNEng(self):
         """Set the values for the engine speed PID"""
-        print "Set engine speed PID values"
-           
+        if(self.serialPort.isOpen()):
+            print "Set engine speed PID values"
+            cmd = "{} {} {} {}\n".format(CMD_SET_PID_N_ENG,
+                                       self.spinPidNEngP.get(),
+                                       self.spinPidNEngI.get(),
+                                       self.spinPidNEngD.get())
+            self.serialPort.write(cmd)
+          
     def read_serial(self):
         """
         Check for input from the serial port. On fetching a line, parse
         the sensor values and append to the stored data and post a replot
         request.
         """
+        print "Read..."
         if self.serialPort.inWaiting() != 0:
             line = self.serialPort.readline()
             line = line.decode('ascii').strip("\r\n")
@@ -181,7 +204,7 @@ class Gui(tk.Frame):
                     self.after_idle(self.replot)
                 except Exception as e:
                     print(e)
-        self.after(10, self.read_serial)
+        self.after(1000, self.read_serial)
 
 def run():
     """Run graphics"""
