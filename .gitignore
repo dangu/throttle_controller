@@ -298,3 +298,7 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# Auto generated files
+.ino.cpp
+.settings

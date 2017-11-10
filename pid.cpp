@@ -122,3 +122,13 @@ void PID::setPGain(double P)
 {
 	_P_gain = P;
 }
+
+void PID::setIGain(double I)
+{
+	_I_gain = I;
+}
+
+void PID::setDGain(double D)
+{
+	_D_gain = D;
+}

@@ -10,6 +10,8 @@ public:
   double getOutput();
   void debugPrint(double, double);
   void setPGain(double);
+  void setIGain(double);
+  void setDGain(double);
 
 private:
   double _u;

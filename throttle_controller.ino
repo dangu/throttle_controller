@@ -34,7 +34,7 @@ volatile uint16_t wMicrosDiffList2[10];
 volatile uint16_t *wMicrosDiffListPtr=wMicrosDiffList;
 volatile uint16_t *wMicrosDiffListPtrToPrint;
 
-PID pid;
+PID pid_servo;
 PID pid_n_eng;
 
 status_t	status;
@@ -64,7 +64,7 @@ void setup() {
   Serial.println(MCUSR, BIN);
   Serial.println(WDTCSR, BIN);
   motor.init();
-  pid.init();
+  pid_servo.init();
   pid_n_eng.init();
   pid_n_eng.setPGain(0.1);
 
@@ -133,9 +133,9 @@ void loop() {
   ref=980-100*6.92f;
   ref = max(288,ref);
   ref = min(980,ref);
-  if(pid.calculate((double)ref, (double)pos))
+  if(pid_servo.calculate((double)ref, (double)pos))
   {
-    u=(int)pid.getOutput();
+    u=(int)pid_servo.getOutput();
     // Stop motor if the output is small enough
     // or if user pressed '0'
     if((abs(u)<40) || forceMotorStopped)

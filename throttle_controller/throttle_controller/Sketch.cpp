@@ -23,7 +23,7 @@ Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
 volatile uint32_t wCounter;
 
-PID pid;
+PID pid_servo;
 
 // The do_reboot is courtesy of this forum post:
 // https://github.com/Optiboot/optiboot/issues/180
@@ -56,7 +56,7 @@ void setup() {
   Serial.println(MCUSR, BIN);
   Serial.println(WDTCSR, BIN);
   motor.init();
-  pid.init();
+  pid_servo.init();
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);
    
@@ -101,9 +101,9 @@ void loop() {
   ref = refIn-200;
   ref = max(200,ref);
   ref = min(800,ref);
-  if(pid.calculate((double)ref, (double)pos))
+  if(pid_servo.calculate((double)ref, (double)pos))
   {
-    u=-(int)pid.getOutput();
+    u=-(int)pid_servo.getOutput();
     // Stop motor if the output is small enough
     if(abs(u)<40)
     {
