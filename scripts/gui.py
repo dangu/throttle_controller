@@ -40,17 +40,75 @@ class Gui(tk.Frame):
 
         btnFlash = tk.Button(parent, text="Flash", command=self.cbFlash)
         btnFlash.grid(row=0, column=3, sticky="nsew", padx=2, pady=2)
-
-        self.scaleRpmTarget = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, tickinterval=100, command = self.cbScale1)
-        self.scaleRpmTarget.set(settings.rpmStart)
-        self.scaleRpmTarget.grid(row=1, column=0)
         
-        self.scaleRpmMeasured = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, command = self.cbScale1)
-        self.scaleRpmMeasured.grid(row=1, column=1)
-
-        self.scaleServoPosMeasured = tk.Scale(parent,  from_=settings.servoMax, to=settings.servoMin, length=500, command = self.cbScale1)
-        self.scaleServoPosMeasured.grid(row=1, column=2)
+        framePID = tk.Frame(parent, bd=2, relief=tk.GROOVE)
+        framePID.grid(row=1)
         
+        labelServo = tk.Label(framePID, text="Servo")
+        labelServo.grid(row=3, column=0, sticky="e")
+
+        labelEng = tk.Label(framePID, text="nEng")
+        labelEng.grid(row=4, column=0, sticky="e")
+
+        labelP = tk.Label(framePID, text="P")
+        labelP.grid(row=2, column=1, sticky="nsew")
+
+        labelI = tk.Label(framePID, text="I")
+        labelI.grid(row=2, column=2, sticky="nsew")
+
+        labelD = tk.Label(framePID, text="D")
+        labelD.grid(row=2, column=3, sticky="nsew")
+        
+        # PID values
+        spinboxWidth = 5
+        spinPidServoP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidServoP.grid(row=3, column=1)
+        spinPidServoP.delete(0,"end")
+        spinPidServoP.insert(tk.END,"0")
+ 
+        spinPidServoI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidServoI.grid(row=3, column=2)
+        spinPidServoI.delete(0,"end")
+        spinPidServoI.insert(tk.END,"0")
+  
+        spinPidServoD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidServoD.grid(row=3, column=3)
+        spinPidServoD.delete(0,"end")
+        spinPidServoD.insert(tk.END,"0")
+         
+        btnSetPidServo = tk.Button(framePID, text="Set", command=self.cbSetPidServo)
+        btnSetPidServo.grid(row=3, column=4, sticky="nsew", padx=2, pady=2)
+
+        spinPidNEngP = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidNEngP.grid(row=4, column=1)
+        spinPidNEngP.delete(0,"end")
+        spinPidNEngP.insert(tk.END,"0")
+          
+        spinPidNEngI = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidNEngI.grid(row=4, column=2)
+        spinPidNEngI.delete(0,"end")
+        spinPidNEngI.insert(tk.END,"0")
+        
+        spinPidNEngD = tk.Spinbox(framePID, width=spinboxWidth, from_=0, to=10, increment=0.01)
+        spinPidNEngD.grid(row=4, column=3)
+        spinPidNEngD.delete(0,"end")
+        spinPidNEngD.insert(tk.END,"0")
+
+        btnSetPidNEng = tk.Button(framePID, text="Set", command=self.cbSetPidNEng)
+        btnSetPidNEng.grid(row=4, column=4, sticky="nsew", padx=2, pady=2)
+
+# 
+# 
+#         self.scaleRpmTarget = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, tickinterval=100, command = self.cbScale1)
+#         self.scaleRpmTarget.set(settings.rpmStart)
+#         self.scaleRpmTarget.grid(row=2, column=0)
+#         
+#         self.scaleRpmMeasured = tk.Scale(parent,  from_=settings.rpmMax, to=settings.rpmMin, length=500, command = self.cbScale1)
+#         self.scaleRpmMeasured.grid(row=2, column=1)
+# 
+#         self.scaleServoPosMeasured = tk.Scale(parent,  from_=settings.servoMax, to=settings.servoMin, length=500, command = self.cbScale1)
+#         self.scaleServoPosMeasured.grid(row=2, column=2)
+#         
          
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
@@ -77,7 +135,7 @@ class Gui(tk.Frame):
     def cbReset(self):
         """Send a reset command"""
         if self.serialPort.isOpen():
-            self.serialPort.write("R")
+            self.serialPort.write("R\n")
 
     def cbFlash(self):
         """Flash with new software"""
@@ -96,6 +154,13 @@ class Gui(tk.Frame):
                 # Save the directory for opening the next time
                 self.initialHexFileDir = os.path.dirname(filename)
                 
+    def cbSetPidServo(self):
+        """Set the values for the servo PID"""
+        print "Set servo PID values"
+  
+    def cbSetPidNEng(self):
+        """Set the values for the engine speed PID"""
+        print "Set engine speed PID values"
            
     def read_serial(self):
         """
@@ -117,72 +182,6 @@ class Gui(tk.Frame):
                 except Exception as e:
                     print(e)
         self.after(10, self.read_serial)
-
-class Debug:
-    def __init__(self, parent):
-    # create a Frame for the Text and Scrollbar
-        txt_frm = tk.Frame(parent, width=600, height=600)
-        txt_frm.pack(fill="both", expand=True)
-        # ensure a consistent GUI size
-        txt_frm.grid_propagate(False)
-        # implement stretchability
-        txt_frm.grid_rowconfigure(0, weight=1)
-        txt_frm.grid_columnconfigure(0, weight=1)
-        
-        btn1 = tk.Button(txt_frm, text="Read config", command=self.readConfig)
-        btn1.grid(row=1, column=0, sticky="nsew", padx=2, pady=2)
-
-    # create a Text widget
-        self.textbox1 = tk.Text(txt_frm, borderwidth=3, relief="sunken")
-        #self.txt.config(font=("consolas", 12), undo=True, wrap='word')
-        self.textbox1.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-
-    # create a Scrollbar and associate it with txt
-        scrollb = tk.Scrollbar(txt_frm, command=self.textbox1.yview)
-        scrollb.grid(row=0, column=1, sticky='nsew')
-        self.textbox1['yscrollcommand'] = scrollb.set
-        
-    def __init__2(self):
-        top = tk.Tk()
-        
-        filename = r"../game/src/test.chr"
-        
-        C = tk.Canvas(top, width=150, height=150)
-        C.pack()
-        btn1 = tk.Button(top, text="Read config", command=self.readConfig)
-        btn1.pack()
-        self.textbox1 = tk.Text(top)
-        self.textbox1.pack()
-
-        self.textbox1.insert(tk.INSERT, "click here!")
-        
-        # create a Scrollbar and associate it with txt
-        scrollb = tk.Scrollbar(top, command=self.textbox1.yview)
-        self.textbox1['yscrollcommand'] = scrollb.set
-
-    def enter(self):
-        """Enter callback"""
-        print "Enter"
-        
-    def leave(self):
-        """Leave callback"""
-        print leave
-        
-    def click(self):
-        """Callback for click"""
-        print "Click!"
-        
-    def readConfig(self):
-        """Read configuration"""
-        print "Read config..."
-        #self.textbox1.insert(0,"Read config...")
-        self.textbox1.insert(tk.END, "click here!\n1\n")
-       
-    def initSerial(self):
-        """Init serial communication"""
-
-        self.ser.open()
-
 
 def run():
     """Run graphics"""
