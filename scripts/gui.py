@@ -187,9 +187,9 @@ class Gui(tk.Frame):
         labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
         labelScaleRpmMeasured.grid(row=0, column=1, sticky="nsew")
              
-        self.scaleRpmTarget = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100, command = self.cbScale1)
-        self.scaleRpmTarget.set(settings.rpmStart)
-        self.scaleRpmTarget.grid(row=2, column=0)
+        self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100, command = self.cbScaleExtNEngRef)
+        self.scaleExtNEngRef.set(settings.rpmStart)
+        self.scaleExtNEngRef.grid(row=2, column=0)
          
         self.scaleRpmMeasured = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, command = self.cbScale1)
         self.scaleRpmMeasured.grid(row=2, column=1)
@@ -200,14 +200,16 @@ class Gui(tk.Frame):
         labelScalePotMeasured = tk.Label(frameAD, text="Pot measured")
         labelScalePotMeasured.grid(row=0, column=2, sticky="nsew")
 
-        labelScaleServoPosTarget = tk.Label(frameAD, text="Servo target")
+        labelScaleServoPosTarget = tk.Label(frameAD, text="Servo ext target")
         labelScaleServoPosTarget.grid(row=0, column=3, sticky="nsew")
+        labelScaleServoPosTarget = tk.Label(frameAD, text="Servo target")
+        labelScaleServoPosTarget.grid(row=0, column=4, sticky="nsew")
         labelScaleServoPosVirtual = tk.Label(frameAD, text="Servo virtual")
-        labelScaleServoPosVirtual.grid(row=0, column=4, sticky="nsew")
+        labelScaleServoPosVirtual.grid(row=0, column=5, sticky="nsew")
         labelScalePotVirtual = tk.Label(frameAD, text="Pot virtual")
-        labelScalePotVirtual.grid(row=0, column=5, sticky="nsew")
+        labelScalePotVirtual.grid(row=0, column=6, sticky="nsew")
         labelScalePotVirtual = tk.Label(frameAD, text="Servo output")
-        labelScalePotVirtual.grid(row=0, column=6, sticky="nsew")            
+        labelScalePotVirtual.grid(row=0, column=7, sticky="nsew")            
         labelMin = tk.Label(frameAD, text="Min")
         labelMin.grid(row=1, column=0, sticky="nsew")
         labelMax = tk.Label(frameAD, text="Max")
@@ -243,17 +245,20 @@ class Gui(tk.Frame):
         checkboxServoOverride = tk.Checkbutton(frameAD, text="Override", var=self.servoPosRefOverrideFlag, command = self.cbServoPosRefOverride)
         checkboxServoOverride.grid(row=2, column=3, sticky="nsew")
         
-        self.scaleServoPosTarget = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
-        self.scaleServoPosTarget.grid(row=3, column=3)
- 
+        self.scaleExtServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScaleExtServoPosRef)
+        self.scaleExtServoPosRef.grid(row=3, column=3)
+
+        self.scaleServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
+        self.scaleServoPosRef.grid(row=3, column=4)
+  
         self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
-        self.scaleServoPosVirtual.grid(row=3, column=4)
+        self.scaleServoPosVirtual.grid(row=3, column=5)
       
         self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
-        self.scalePotVirtual.grid(row=3, column=5)
+        self.scalePotVirtual.grid(row=3, column=6)
 
         self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, command = self.cbScale1)
-        self.servoOutput.grid(row=3, column=6)                
+        self.servoOutput.grid(row=3, column=7)                
         # Converstion
         btnReadConversion=tk.Button(frameConvert, text="Read conversion params", command=self.cbReadConversionParams)
         btnReadConversion.grid(row=1,column=10)
@@ -389,6 +394,26 @@ class Gui(tk.Frame):
         """Callback for scale 1"""
         #print "Value {}".format(var2)
         
+    def cbScaleExtNEngRef(self, nEngExtRef):
+        """Callback for external engine speed reference scale"""
+        if self.serialPort.isOpen():
+            if(self.nEngRefOverrideFlag.get()):
+                cmd = "{} {}\n".format(CMD_ENABLE_EXT_N_ENG,
+                                       nEngExtRef)
+            else:
+                cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
+            self.serialPort.writeQueued(cmd)
+
+    def cbScaleExtServoPosRef(self, servoPosExtRef):
+        """Callback for external servo reference position"""
+        if self.serialPort.isOpen():
+            if(self.servoPosRefOverrideFlag.get()):
+                cmd = "{} {}\n".format(CMD_ENABLE_EXT_SERVO_POS,
+                                       servoPosExtRef)
+            else:
+                cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
+            self.serialPort.writeQueued(cmd)
+                    
     def cbReset(self):
         """Send a reset command"""
         if self.serialPort.isOpen():
@@ -476,21 +501,12 @@ class Gui(tk.Frame):
             
     def cbNEngRefOverride(self):
         """Override engine speed reference"""
-        print "Override engine speed reference {}".format(self.nEngRefOverrideFlag.get())
-        if(self.nEngRefOverrideFlag.get()):
-            cmd = "{}\n".format(CMD_ENABLE_EXT_N_ENG)
-        else:
-            cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
-        self.serialPort.writeQueued(cmd)
+        self.cbScaleExtNEngRef(self.scaleExtNEngRef.get())
+
         
     def cbServoPosRefOverride(self):
         """Override servo position reference"""
-        print "Override servo position reference {}".format(self.servoPosRefOverrideFlag.get())
-        if(self.nEngRefOverrideFlag.get()):
-            cmd = "{}\n".format(CMD_ENABLE_EXT_SERVO_POS)
-        else:
-            cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
-        self.serialPort.writeQueued(cmd)    
+        self.cbScaleExtServoPosRef(self.scaleE)
         
 def run():
     """Run graphics"""

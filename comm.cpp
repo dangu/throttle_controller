@@ -9,6 +9,11 @@ extern conversions_t conversions;
 extern PID pid_servo;
 extern PID pid_n_eng;
 
+#define CMD_ENABLE_EXT_N_ENG_REF	'a'
+#define CMD_DISABLE_EXT_N_ENG_REF	'b'
+#define CMD_ENABLE_EXT_SERVO_POS	'c'
+#define CMD_DISABLE_EXT_SERVO_POS	'd'
+
 #define CMD_DISP_VALUES				'i'
 #define RESP_DISP_VALUES 			'I'
 
@@ -158,7 +163,7 @@ void handleCommand(uint8_t rxBuf[])
 		reboot2();
 		break;
 
-	case 'a':
+	case CMD_ENABLE_EXT_N_ENG_REF:
 		if(nData == 1)
 		{
 			// Enable external engine speed reference
@@ -172,13 +177,13 @@ void handleCommand(uint8_t rxBuf[])
 			Serial.println("Error");
 		}
 		break;
-	case 'b':
+	case CMD_DISABLE_EXT_N_ENG_REF:
 		// Disable external engine speed reference
 		status.nEngRefExtEnable = false;
 		Serial.println("OK");
 		break;
 
-	case 'c':
+	case CMD_ENABLE_EXT_SERVO_POS:
 		if(nData == 1)
 		{
 			// Enable external servo position
@@ -192,7 +197,7 @@ void handleCommand(uint8_t rxBuf[])
 		}
 		break;
 
-	case 'd':
+	case CMD_DISABLE_EXT_SERVO_POS:
 		// Disable external servo position
 		status.servoPosRefExtEnable = false;
 		Serial.println("OK");
