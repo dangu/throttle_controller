@@ -75,7 +75,6 @@ void setup() {
 
 // the loop routine runs over and over again forever:
 void loop() {
-  int pos;
   static int ref = 500;
   static int refSerial = 800; //!< rpm value from serial input
   int refIn;  //!< Analog reference value input
@@ -97,8 +96,7 @@ void loop() {
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
 
-  static uint8_t rxBuf[20];
-  static uint8_t rxBufIn;
+
   /*
   int pause = 300;
   motor.forward(speed);
@@ -122,18 +120,18 @@ void loop() {
 
   ref = 980-ref*6.92f;
 
-  pos = analogRead(MOTOR_POS);
-  refIn = analogRead(REF_IN);
+  status.servoPosRaw_u16 = analogRead(MOTOR_POS);
+  status.potInCabRaw_u16 = analogRead(REF_IN);
 
   // Min 518
   // Max 907 875
   // Max gas pedal 1023
-  refTemp = (refIn-518);
+  refTemp = (status.potInCabRaw_u16-518);
   //ref = 980-refTemp*1.37f;
   ref=980-100*6.92f;
   ref = max(288,ref);
   ref = min(980,ref);
-  if(pid_servo.calculate((double)ref, (double)pos))
+  if(pid_servo.calculate((double)ref, (double)status.servoPosRaw_u16))
   {
     u=(int)pid_servo.getOutput();
     // Stop motor if the output is small enough
@@ -231,41 +229,7 @@ void loop() {
     }
 
   }
-  
-  if(Serial.available() > 0)
-  {
-    char chr;
-    chr = Serial.read();
-
-    switch(chr)
-    {
- /*   case '0':
-    	// Turn off servo
-    	Serial.println("Stopping motor...");
-    	motor.stop();
-		forceMotorStopped = true;
-		break;*/
-
-    default:
-    	if(rxBufIn>=(sizeof(rxBuf)-1))
-    	{
-    		Serial.println("Rx buffer overflow!");
-    		rxBufIn = 0;
-    	}
-
-    	rxBuf[rxBufIn++] = chr;
-
-    	if(chr == '\n')
-    	{
-    		rxBuf[rxBufIn] = '\0';	// End the string
-    		// Handle command
-    		handleCommand(rxBuf);
-    		rxBufIn = 0;
-    	}
-
-    	break;
-    }
-  }
+  handleSerialComm();
 
  /* t=millis();
   if((t-tOld)>stepTime)

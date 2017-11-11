@@ -132,3 +132,38 @@ void PID::setDGain(double D)
 {
 	_D_gain = D;
 }
+
+void PID::setUMax(double val)
+{
+	_uMax = val;
+}
+
+void PID::setUMin(double val)
+{
+	_uMin = val;
+}
+
+double PID::getPGain()
+{
+	return _P_gain;
+}
+
+double PID::getIGain()
+{
+	return _I_gain;
+}
+
+double PID::getDGain()
+{
+	return _D_gain;
+}
+
+double PID::getUMax()
+{
+	return _uMax;
+}
+
+double PID::getUMin()
+{
+	return _uMin;
+}
