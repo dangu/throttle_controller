@@ -70,17 +70,10 @@ class Gui(tk.Frame):
         
         self.timerScaleUpdate = time.time()
         
-        self.btnSerial=tk.Button(parent, text="Open serial port", command=self.cbOpenCloseSerialPort)
-        self.btnSerial.grid(row=0,column=0)
 
-        self.btnReadSerial=tk.Button(parent, text="Read serial port", command=self.cbReadSerialPort)
-        self.btnReadSerial.grid(row=0,column=1)
         
-        btnReset = tk.Button(parent, text="Reset", command=self.cbReset)
-        btnReset.grid(row=0, column=2, sticky="nsew", padx=2, pady=2)
-
-        btnFlash = tk.Button(parent, text="Flash", command=self.cbFlash)
-        btnFlash.grid(row=0, column=3, sticky="nsew", padx=2, pady=2)
+        frameTopRow = tk.Frame(parent, bd=2, relief=tk.GROOVE)
+        frameTopRow.grid(row=0)
         
         framePID = tk.Frame(parent, bd=2, relief=tk.GROOVE)
         framePID.grid(row=1)
@@ -96,7 +89,19 @@ class Gui(tk.Frame):
 
         frameConvert = tk.Frame(parent, bd=2, relief=tk.GROOVE)
         frameConvert.grid(row=1,column=2, columnspan=2, sticky="nsew")
-                        
+                         
+        self.btnSerial=tk.Button(frameTopRow, text="Open serial port", command=self.cbOpenCloseSerialPort)
+        self.btnSerial.grid(row=0,column=0)
+
+        self.btnReadSerial=tk.Button(frameTopRow, text="Read serial port", command=self.cbReadSerialPort)
+        self.btnReadSerial.grid(row=0,column=1)
+        
+        btnReset = tk.Button(frameTopRow, text="Reset", command=self.cbReset)
+        btnReset.grid(row=0, column=2, sticky="nsew", padx=2, pady=2)
+
+        btnFlash = tk.Button(frameTopRow, text="Flash", command=self.cbFlash)
+        btnFlash.grid(row=0, column=3, sticky="nsew", padx=2, pady=2)
+            
         labelServo = tk.Label(framePID, text="Servo")
         labelServo.grid(row=3, column=0, sticky="e")
 
@@ -199,11 +204,11 @@ class Gui(tk.Frame):
 
 
              
-        self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100)
+        self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=500)
         self.scaleExtNEngRef.set(settings.rpmStart)
         self.scaleExtNEngRef.grid(row=2, column=0)
 
-        self.scaleNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100)
+        self.scaleNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength)
         self.scaleNEngRef.set(settings.rpmStart)
         self.scaleNEngRef.grid(row=2, column=1)
                  
@@ -264,16 +269,16 @@ class Gui(tk.Frame):
         self.scaleExtServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20)
         self.scaleExtServoPosRef.grid(row=3, column=3)
 
-        self.scaleServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
+        self.scaleServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scaleServoPosRef.grid(row=3, column=4)
   
-        self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scaleServoPosVirtual.grid(row=3, column=5)
       
-        self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scalePotVirtual.grid(row=3, column=6)
 
-        self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, command = self.cbScale1)
+        self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, tickinterval=50)
         self.servoOutput.grid(row=3, column=7)                
         # Converstion
         btnReadConversion=tk.Button(frameConvert, text="Read conversion params", command=self.cbReadConversionParams)

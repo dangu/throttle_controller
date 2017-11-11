@@ -102,6 +102,8 @@ void setup() {
   pid_servo.init();
   pid_n_eng.init();
   pid_n_eng.setPGain(0.1);
+  pid_n_eng.setUMin(0.0);
+  pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
   conversions.servoK 		= -0.1445086705;
@@ -144,7 +146,7 @@ void loop() {
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
   status.potInCabRaw_u16 = analogRead(REF_IN);
   getNEngSample();
-  status.nEng_f = 400.0; // Remove this! Only for test
+ // status.nEng_f = 400.0; // Remove this! Only for test
 
   status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
   status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
