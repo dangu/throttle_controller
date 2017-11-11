@@ -261,7 +261,10 @@ class Gui(tk.Frame):
         
         labelPot = tk.Label(frameConvert, text="Pot")
         labelPot.grid(row=2, column=0, sticky="nsew")
-        
+
+        labelPot = tk.Label(frameConvert, text="nEng")
+        labelPot.grid(row=3, column=0, sticky="nsew")
+                
         labelK = tk.Label(frameConvert, text="k")
         labelK.grid(row=0, column=1, sticky="nsew")
         
@@ -300,6 +303,11 @@ class Gui(tk.Frame):
         self.spinAFiltPot.grid(row=2, column=3, sticky="e")
         self.spinAFiltPot.delete(0,"end")
         self.spinAFiltPot.insert(tk.END,"0")  
+        
+        self.spinAFiltNEng = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1, increment=0.1)
+        self.spinAFiltNEng.grid(row=3, column=3, sticky="e")
+        self.spinAFiltNEng.delete(0,"end")
+        self.spinAFiltNEng.insert(tk.END,"0")  
                               
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
@@ -357,7 +365,7 @@ class Gui(tk.Frame):
                             scale.set(float(respList[i]))
                             i+=1    
                 elif cmd == RESP_DISP_CONVERSION_PARAMS:
-                    if len(respList) == (1+6):
+                    if len(respList) == (1+7):
                         i=1
                         print "Data: {}".format(respList[1:])
                         for spinbox in [self.spinServoK,
@@ -365,7 +373,8 @@ class Gui(tk.Frame):
                                         self.spinPotK,
                                         self.spinPotM,
                                         self.spinAFiltServo,
-                                        self.spinAFiltPot]:
+                                        self.spinAFiltPot,
+                                        self.spinAFiltNEng]:
                             spinbox.delete(0,"end")
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1                            
@@ -449,13 +458,14 @@ class Gui(tk.Frame):
         """Write conversion parameters"""
         if self.serialPort.isOpen():
             print "Write conversion parameters"
-            cmd = "{} {} {} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
+            cmd = "{} {} {} {} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
                                             self.spinServoK.get(),
                                             self.spinServoM.get(),
                                             self.spinPotK.get(),
                                             self.spinPotM.get(),
                                             self.spinAFiltServo.get(),
-                                            self.spinAFiltPot.get())
+                                            self.spinAFiltPot.get(),
+                                            self.spinAFiltNEng.get())
             self.serialPort.writeQueued(cmd)
             
 def run():

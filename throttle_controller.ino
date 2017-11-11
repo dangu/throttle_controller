@@ -110,6 +110,7 @@ void setup() {
   conversions.potM 			= -102.3715415;
   conversions.aFiltServo_f 	= 0.5;
   conversions.aFiltPot_f 	= 0.5;
+  conversions.aFiltNEng_f	= 0.5;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);

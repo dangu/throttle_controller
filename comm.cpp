@@ -80,6 +80,8 @@ void displayConversionParams()
 	Serial.print(conversions.aFiltServo_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
 	Serial.print(conversions.aFiltPot_f,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.aFiltNEng_f,DECIMALS_IN_DISPLAY);
 	Serial.print('\n');
 }
 
@@ -240,7 +242,7 @@ void handleCommand(uint8_t rxBuf[])
 
 	case CMD_SET_CONVERSION_PARAMS:
 		// Set conversion parameters
-		if(nData == 6)
+		if(nData == 7)
 		{
 			conversions.servoK 			= data[0];
 			conversions.servoM 			= data[1];
@@ -248,6 +250,7 @@ void handleCommand(uint8_t rxBuf[])
 			conversions.potM 			= data[3];
 			conversions.aFiltServo_f 	= data[4];
 			conversions.aFiltPot_f 		= data[5];
+			conversions.aFiltNEng_f		= data[6];
 			Serial.println("OK");
 		}
 		else
