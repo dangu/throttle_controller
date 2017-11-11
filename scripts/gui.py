@@ -16,6 +16,7 @@ settings.rpmStart   = 800
 settings.servoMax   = 100
 settings.servoMin   = 0
 settings.scalesLength = 300
+settings.minDTScaleUpdate = 0.2 # [s]Minimum time between scale updates
 
 # Serial commands understood by the control unit
 CMD_ENABLE_EXT_N_ENG        = 'a'
@@ -60,6 +61,9 @@ class Gui(tk.Frame):
     def __init__(self, parent, title, serialPort):
         """Init"""
         tk.Frame.__init__(self, parent)
+        
+        self.timerOverrideNEng = time.time()
+        self.timerOverrideServoPos = time.time()
         self.serialPort = serialPort
         self.initialHexFileDir = r"/tmp"
         
@@ -364,7 +368,7 @@ class Gui(tk.Frame):
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
                     if len(respList) == (1+6):
-                        print "Data: {}".format(respList[1:])
+                        #print "Data: {}".format(respList[1:])
                         i=1
                         for scale in [self.scaleRpmMeasured,
                                       self.scaleServoPosMeasured,
@@ -395,24 +399,32 @@ class Gui(tk.Frame):
         #print "Value {}".format(var2)
         
     def cbScaleExtNEngRef(self, nEngExtRef):
-        """Callback for external engine speed reference scale"""
+        """Callback for external engine speed reference scale
+        
+        The minimum delta time between two updates is limited to settings.minDTScaleUpdate"""
         if self.serialPort.isOpen():
             if(self.nEngRefOverrideFlag.get()):
-                cmd = "{} {}\n".format(CMD_ENABLE_EXT_N_ENG,
-                                       nEngExtRef)
-            else:
-                cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
-            self.serialPort.writeQueued(cmd)
+                tNow = time.time()
+                if((tNow-self.timerOverrideNEng)>settings.minDTScaleUpdate):
+                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_N_ENG,
+                                           nEngExtRef)
+                    self.serialPort.writeQueued(cmd)
+                    self.timerOverrideNEng = tNow
+
 
     def cbScaleExtServoPosRef(self, servoPosExtRef):
-        """Callback for external servo reference position"""
+        """Callback for external servo reference position
+        
+        The minimum delta time between two updates is limited to settings.minDTScaleUpdate"""
         if self.serialPort.isOpen():
             if(self.servoPosRefOverrideFlag.get()):
-                cmd = "{} {}\n".format(CMD_ENABLE_EXT_SERVO_POS,
-                                       servoPosExtRef)
-            else:
-                cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
-            self.serialPort.writeQueued(cmd)
+                tNow = time.time()
+                if((tNow-self.timerOverrideServoPos)>settings.minDTScaleUpdate):
+                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_SERVO_POS,
+                                           servoPosExtRef)
+                    self.serialPort.writeQueued(cmd)
+                    self.timerOverrideServoPos = tNow
+
                     
     def cbReset(self):
         """Send a reset command"""
@@ -501,12 +513,22 @@ class Gui(tk.Frame):
             
     def cbNEngRefOverride(self):
         """Override engine speed reference"""
-        self.cbScaleExtNEngRef(self.scaleExtNEngRef.get())
+        if self.serialPort.isOpen():
+            if(self.nEngRefOverrideFlag.get()):
+                self.cbScaleExtNEngRef(self.scaleExtNEngRef.get())
+            else:
+                cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
+                self.serialPort.writeQueued(cmd)
 
         
     def cbServoPosRefOverride(self):
         """Override servo position reference"""
-        self.cbScaleExtServoPosRef(self.scaleE)
+        if self.serialPort.isOpen():
+            if(self.servoPosRefOverrideFlag.get()):
+                self.cbScaleExtServoPosRef(self.scaleExtServoPosRef.get())
+            else:
+                cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
+                self.serialPort.writeQueued(cmd)
         
 def run():
     """Run graphics"""
