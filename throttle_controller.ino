@@ -40,6 +40,41 @@ PID pid_n_eng;
 status_t		status;
 conversions_t	conversions;
 
+/** @brief Get one sample of the engine speed */
+void getNEngSample()
+{
+	// Critical region:
+	// The interrupts need to be turned off before reading the
+	// variables used inside the interrupt routine
+	noInterrupts();
+	/*    wMicrosDiffTemp = wMicrosDiff;
+wMillisDiffTemp = wMillisDiff;
+wMillisNowTemp = wMillisNow;
+wMicrosNowTemp = wMicrosNow;
+wCounterTemp = wCounter;*/
+
+	if(wMicrosDiff == 0)
+	{
+		status.nEng_f=0;
+	}
+	else
+	{
+		status.nEng_f=4*1000000/wMicrosDiff;
+	}
+
+	// Double buffered list
+	if(wMicrosDiffListPtr == wMicrosDiffList)
+	{
+		wMicrosDiffListPtr = wMicrosDiffList2;
+		wMicrosDiffListPtrToPrint = wMicrosDiffList;
+	}
+	else
+	{
+		wMicrosDiffListPtr = wMicrosDiffList;
+		wMicrosDiffListPtrToPrint = wMicrosDiffList2;
+	}
+	interrupts();
+}
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -99,37 +134,15 @@ void loop() {
   uint32_t wCounterTemp;
   static uint32_t wCounterTempOld;
   static uint32_t millisOld;
-  float nEng;
-  float refTemp;
+  float nEngRefTemp;
+  float servoPosRefTemp;
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
 
-
-  /*
-  int pause = 300;
-  motor.forward(speed);
-  delay(pause);
-  motor.forward(0);
-  delay(pause);
-  motor.reverse(speed);
-  delay(pause);
-  motor.stop();
-  delay(pause);*/
-
-  // Calculate output of engine speed PID
-  //
-  // Min servo=980
-  // Max servo=288
-  if(pid_n_eng.calculate((double)refSerial, (double)nEng))
-  {
-	  u_pid_n_eng = pid_n_eng.getOutput();
-
-  }
-
-  ref = 980-ref*6.92f;
-
+  // Inputs
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
   status.potInCabRaw_u16 = analogRead(REF_IN);
+  getNEngSample();
 
   status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
   status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
@@ -137,18 +150,39 @@ void loop() {
   // Create filtered values
   status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
   status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
+  status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
 
 
+  // Engine speed PID calculation
+  if(status.nEngRefExtEnable)
+  {
+	  // Use external engine speed reference
+	  nEngRefTemp = (float)status.nEngRefExt_u16;
+  }
+  else
+  {
+	  // Use internal engine speed reference
+	  nEngRefTemp = (float)status.nEngRef_u16;
+  }
+  if(pid_n_eng.calculate((double)nEngRefTemp, (double)status.nEngFilt_f))
+  {
+	  u_pid_n_eng = pid_n_eng.getOutput();
+  }
 
-  // Min 518
-  // Max 907 875
-  // Max gas pedal 1023
-  refTemp = (status.potInCabRaw_u16-518);
-  //ref = 980-refTemp*1.37f;
-  ref=980-100*6.92f;
-  ref = max(288,ref);
-  ref = min(980,ref);
-  if(pid_servo.calculate((double)ref, (double)status.servoPosRaw_u16))
+
+  // Servo PID calculation
+
+  if(status.servoPosRefExtEnable)
+  {
+	  // Use external servo position reference
+	  servoPosRefTemp = status.servoPosRefExt_f;
+  }
+  else
+  {
+	  // Use internal servo position reference
+	  servoPosRefTemp = u_pid_n_eng;
+  }
+  if(pid_servo.calculate((double)servoPosRefTemp, (double)status.servoPosFilt_f))
   {
     u=(int)pid_servo.getOutput();
     // Stop motor if the output is small enough
@@ -161,38 +195,6 @@ void loop() {
     {
       motor.speed(u);
     }
-
-    // Critical region:
-    // The interrupts need to be turned off before reading the
-    // variables used inside the interrupt routine
-    noInterrupts();
-/*    wMicrosDiffTemp = wMicrosDiff;
-    wMillisDiffTemp = wMillisDiff;
-    wMillisNowTemp = wMillisNow;
-    wMicrosNowTemp = wMicrosNow;
-    wCounterTemp = wCounter;*/
-
-    if(wMicrosDiff == 0)
-    {
-    	nEng=0;
-    }
-    else
-    {
-    	nEng=4*1000000/wMicrosDiff;
-    }
-
-    // Double buffered list
-    if(wMicrosDiffListPtr == wMicrosDiffList)
-    {
-    	wMicrosDiffListPtr = wMicrosDiffList2;
-    	wMicrosDiffListPtrToPrint = wMicrosDiffList;
-    }
-    else
-    {
-    	wMicrosDiffListPtr = wMicrosDiffList;
-    	wMicrosDiffListPtrToPrint = wMicrosDiffList2;
-    }
-    interrupts();
 
     if((millis()-millisOld)> 100)
     {
@@ -209,35 +211,6 @@ void loop() {
          *
          */
     	digitalWrite(LED_BUILTIN, HIGH);
-/*    	Serial.print(nEng);
-    	Serial.print(" ");
-    	Serial.print(wMicrosDiffTemp);
-    	Serial.print(" ");
-    	Serial.print(wMillisDiffTemp);
-    	Serial.print(" ");
-    	Serial.print(wMicrosNowTemp);
-    	Serial.print(" ");
-    	Serial.print(wMillisNowTemp);
-    	Serial.print(" ");
-    	Serial.print(refIn);
-    	Serial.print(" ");
-    	Serial.print(ref);
-    	Serial.print(" ");
-    	Serial.println(pos);
-    	for(int i=0;i<10;i++)
-    	{
-    		Serial.print(wMicrosDiffListPtrToPrint[i]);
-    		Serial.print(" ");
-    	}
-    	*/
-/*    	Serial.print(nEng);
-    	Serial.print(" ");
-    	Serial.print(u_pid_n_eng);
-    	Serial.print(" ");
-    	Serial.print(ref);
-    	Serial.print(" ");
-    	Serial.print(refSerial);
-    	Serial.println("");*/
     	millisOld = millis();
     }
     else
@@ -248,18 +221,6 @@ void loop() {
   }
   handleSerialComm();
 
- /* t=millis();
-  if((t-tOld)>stepTime)
-  {
-    ref = refList[ct];
-
-    ct++;
-    if(ct>=sizeof(refList)/sizeof(int))
-    {
-      ct=0;
-    }
-    tOld = t;
-  }*/
 }
 
 /** @brief Interrupt callback at every pulse from the alternator 

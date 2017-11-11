@@ -178,8 +178,8 @@ void handleCommand(uint8_t rxBuf[])
 		if(nData == 1)
 		{
 			// Enable external servo position
-			status.servoPosExtEnable = true;
-			status.servoPosExt_f = data[0];
+			status.servoPosRefExtEnable = true;
+			status.servoPosRefExt_f = data[0];
 			Serial.println("OK");
 		}
 		else
@@ -190,7 +190,7 @@ void handleCommand(uint8_t rxBuf[])
 
 	case 'd':
 		// Disable external servo position
-		status.servoPosExtEnable = false;
+		status.servoPosRefExtEnable = false;
 		Serial.println("OK");
 		break;
 
