@@ -84,7 +84,10 @@ class Gui(tk.Frame):
 
         frameAD = tk.Frame(parent, bd=2, relief=tk.GROOVE)
         frameAD.grid(row=2,column=2)
-                
+
+        frameConvert = tk.Frame(parent, bd=2, relief=tk.GROOVE)
+        frameConvert.grid(row=1,column=2, columnspan=2, sticky="nsew")
+                        
         labelServo = tk.Label(framePID, text="Servo")
         labelServo.grid(row=3, column=0, sticky="e")
 
@@ -188,20 +191,62 @@ class Gui(tk.Frame):
         self.scaleRpmMeasured = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, command = self.cbScale1)
         self.scaleRpmMeasured.grid(row=2, column=1)
  
-        # Servo data
+        # A/D converter
         labelScaleServoPosMeasured = tk.Label(frameAD, text="Servo measured")
-        labelScaleServoPosMeasured.grid(row=0, column=0, sticky="nsew")
+        labelScaleServoPosMeasured.grid(row=0, column=1, sticky="nsew")
+        labelScalePotMeasured = tk.Label(frameAD, text="Pot measured")
+        labelScalePotMeasured.grid(row=0, column=2, sticky="nsew")
+
+        labelScaleServoPosTarget = tk.Label(frameAD, text="Servo target")
+        labelScaleServoPosTarget.grid(row=0, column=3, sticky="nsew")
+        labelScaleServoPosVirtual = tk.Label(frameAD, text="Servo virtual")
+        labelScaleServoPosVirtual.grid(row=0, column=4, sticky="nsew")
+        labelScalePotVirtual = tk.Label(frameAD, text="Pot virtual")
+        labelScalePotVirtual.grid(row=0, column=5, sticky="nsew")
+            
+        labelMin = tk.Label(frameAD, text="Min")
+        labelMin.grid(row=1, column=0, sticky="nsew")
+        labelMax = tk.Label(frameAD, text="Max")
+        labelMax.grid(row=2, column=0, sticky="nsew")
+                
+        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoMinAD.grid(row=1, column=1, sticky="e")
+        self.spinServoMinAD.delete(0,"end")
+        self.spinServoMinAD.insert(tk.END,"0")
+
+        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoMaxAD.grid(row=2, column=1, sticky="e")
+        self.spinServoMaxAD.delete(0,"end")
+        self.spinServoMaxAD.insert(tk.END,"0")
+        
+        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotMinAD.grid(row=1, column=2, sticky="e")
+        self.spinPotMinAD.delete(0,"end")
+        self.spinPotMinAD.insert(tk.END,"0")
+
+        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotMaxAD.grid(row=2, column=2, sticky="e")
+        self.spinPotMaxAD.delete(0,"end")
+        self.spinPotMaxAD.insert(tk.END,"0")
           
         self.scaleServoPosMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
-        self.scaleServoPosMeasured.grid(row=1, column=0)
+        self.scaleServoPosMeasured.grid(row=3, column=1)
+      
+        self.scalePotMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scalePotMeasured.grid(row=3, column=2)
+
+        checkboxServoTarget = tk.Checkbutton(frameAD, text="Override")
+        checkboxServoTarget.grid(row=2, column=3, sticky="nsew")
         
-        labelScaleServoPosMeasured = tk.Label(frameAD, text="Pot measured")
-        labelScaleServoPosMeasured.grid(row=0, column=1, sticky="nsew")
-          
-        self.scalePotMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
-        self.scalePotMeasured.grid(row=1, column=1)
-         
-         
+        self.scaleServoPosTarget = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
+        self.scaleServoPosTarget.grid(row=3, column=3)
+ 
+        self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scaleServoPosVirtual.grid(row=3, column=4)
+      
+        self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scalePotVirtual.grid(row=3, column=5)
+                
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
         if self.serialPort.isOpen():
