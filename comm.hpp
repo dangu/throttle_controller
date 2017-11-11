@@ -16,4 +16,11 @@ typedef struct {
 	uint16_t	potInCabRaw_u16;		//!< Measured cab potentiometer value (A/D-converter value)
 }status_t;
 
+typedef struct {
+	float		servoK;					//!< y=kx+m parameter for servo
+	float		servoM;					//!< y=kx+m parameter for servo
+	float		potK;					//!< y=kx+m parameter for pot
+	float		potM;					//!< y=kx+m parameter for pot
+}conversions_t;
+
 #endif

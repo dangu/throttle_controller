@@ -37,8 +37,8 @@ volatile uint16_t *wMicrosDiffListPtrToPrint;
 PID pid_servo;
 PID pid_n_eng;
 
-status_t	status;
-
+status_t		status;
+conversions_t	conversions;
 
 
 // the setup routine runs once when you press reset:
@@ -67,6 +67,12 @@ void setup() {
   pid_servo.init();
   pid_n_eng.init();
   pid_n_eng.setPGain(0.1);
+
+  // Setup conversion parameters
+  conversions.servoK 	= -0.1445086705;
+  conversions.servoM 	= 141.6184;
+  conversions.potK 		= 0.1976284585;
+  conversions.potM 		= -102.3715415;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);

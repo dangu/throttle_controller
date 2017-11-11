@@ -26,9 +26,12 @@ CMD_SET_PID_SERVO           = 'e'
 CMD_SET_PID_N_ENG           = 'f'
 CMD_DISP_PID_PARAMS         = 'g'
 CMD_DISP_VALUES             = 'i'
+CMD_SET_CONVERSION_PARAMS   = 'j'
+CMD_DISP_CONVERSION_PARAMS  = 'k'
 
 RESP_DISP_PID_PARAMS        = 'G'
 RESP_DISP_VALUES            = 'I'
+RESP_DISP_CONVERSION_PARAMS = 'K'
 
 class Sercom(serial.Serial):
     def __init__(self, port, baudrate):
@@ -50,7 +53,6 @@ class Sercom(serial.Serial):
     def processOutQueue(self):
         """Process the out queue to send messages one by one"""
         if len(self.msgOutQueue)>0:
-            print "Processing one message"
             self.write(self.msgOutQueue[0])
             self.msgOutQueue = self.msgOutQueue[1:]  # Remove the first element
 
@@ -247,6 +249,45 @@ class Gui(tk.Frame):
         self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
         self.scalePotVirtual.grid(row=3, column=5)
                 
+        # Converstion
+        btnReadConversion=tk.Button(frameConvert, text="Read conversion params", command=self.cbReadConversionParams)
+        btnReadConversion.grid(row=1,column=10)
+        
+        btnReadConversion=tk.Button(frameConvert, text="Write conversion params", command=self.cbWriteConversionParams)
+        btnReadConversion.grid(row=2,column=10)
+        
+        labelServo = tk.Label(frameConvert, text="Servo")
+        labelServo.grid(row=1, column=0, sticky="nsew")
+        
+        labelPot = tk.Label(frameConvert, text="Pot")
+        labelPot.grid(row=2, column=0, sticky="nsew")
+        
+        labelK = tk.Label(frameConvert, text="k")
+        labelK.grid(row=0, column=1, sticky="nsew")
+        
+        labelX = tk.Label(frameConvert, text="x")
+        labelX.grid(row=0, column=2, sticky="nsew")
+
+        self.spinServoK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoK.grid(row=1, column=1, sticky="e")
+        self.spinServoK.delete(0,"end")
+        self.spinServoK.insert(tk.END,"0")
+        
+        self.spinServoM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoM.grid(row=1, column=2, sticky="e")
+        self.spinServoM.delete(0,"end")
+        self.spinServoM.insert(tk.END,"0")
+        
+        self.spinPotK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotK.grid(row=2, column=1, sticky="e")
+        self.spinPotK.delete(0,"end")
+        self.spinPotK.insert(tk.END,"0")
+        
+        self.spinPotM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotM.grid(row=2, column=2, sticky="e")
+        self.spinPotM.delete(0,"end")
+        self.spinPotM.insert(tk.END,"0") 
+                       
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
         if self.serialPort.isOpen():
@@ -297,6 +338,17 @@ class Gui(tk.Frame):
                         self.scaleRpmMeasured.set(float(respList[1]))
                         self.scaleServoPosMeasured.set(float(respList[2]))
                         self.scalePotMeasured.set(float(respList[3]))
+                elif cmd == RESP_DISP_CONVERSION_PARAMS:
+                    if len(respList) == (1+4):
+                        i=1
+                        print "Data: {}".format(respList[1:])
+                        for spinbox in [self.spinServoK,
+                                        self.spinServoM,
+                                        self.spinPotK,
+                                        self.spinPotM]:
+                            spinbox.delete(0,"end")
+                            spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
+                            i+=1                            
         
     def cbScale1(self, var2):
         """Callback for scale 1"""
@@ -305,7 +357,7 @@ class Gui(tk.Frame):
     def cbReset(self):
         """Send a reset command"""
         if self.serialPort.isOpen():
-            self.serialPort.writeQueued("R\n")
+            self.serialPort.write("R\n")
 
     def cbFlash(self):
         """Flash with new software"""
@@ -360,13 +412,30 @@ class Gui(tk.Frame):
         """Update the display data"""
         if self.serialPort.isOpen():
             if(self.serialPort.isOutQueueEmpty()):
-                print "Update display data"
                 cmd = "{}\n".format(CMD_DISP_VALUES)
                 self.serialPort.writeQueued(cmd)            
                     
             self.serialPort.processOutQueue()
             self.after(100, self.cbDisplayData)
-
+            
+    def cbReadConversionParams(self):
+        """Read conversion parameters"""
+        if self.serialPort.isOpen():
+            print "Read conversion parameters"
+            cmd = "{}\n".format(CMD_DISP_CONVERSION_PARAMS)
+            self.serialPort.writeQueued(cmd)
+            
+    def cbWriteConversionParams(self):
+        """Write conversion parameters"""
+        if self.serialPort.isOpen():
+            print "Write conversion parameters"
+            cmd = "{} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
+                                            self.spinServoK.get(),
+                                            self.spinServoM.get(),
+                                            self.spinPotK.get(),
+                                            self.spinPotM.get())
+            self.serialPort.writeQueued(cmd)
+            
 def run():
     """Run graphics"""
     root = tk.Tk()

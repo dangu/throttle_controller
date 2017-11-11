@@ -4,6 +4,8 @@
 #include "pid.hpp"
 
 extern status_t status;
+extern conversions_t conversions;
+
 extern PID pid_servo;
 extern PID pid_n_eng;
 
@@ -12,6 +14,11 @@ extern PID pid_n_eng;
 
 #define CMD_DISP_PID_PARAMS			'g'
 #define RESP_DISP_PID_PARAMS 		'G'
+
+#define CMD_SET_CONVERSION_PARAMS  	'j'
+
+#define CMD_DISP_CONVERSION_PARAMS  'k'
+#define RESP_DISP_CONVERSION_PARAMS 'K'
 
 #define DECIMALS_IN_DISPLAY	5
 
@@ -50,6 +57,21 @@ void displayValues()
 	Serial.print(status.servoPosRaw_u16);
 	Serial.print(" ");
 	Serial.print(status.potInCabRaw_u16);
+	Serial.print('\n');
+}
+
+/** @brief Display conversion parameters */
+void displayConversionParams()
+{
+	Serial.print(RESP_DISP_CONVERSION_PARAMS);
+	Serial.print(" ");
+	Serial.print(conversions.servoK,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.servoM,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.potK,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.potM,DECIMALS_IN_DISPLAY);
 	Serial.print('\n');
 }
 
@@ -206,6 +228,28 @@ void handleCommand(uint8_t rxBuf[])
 	case CMD_DISP_VALUES:
 		// Display current values
 		displayValues();
+		break;
+
+	case CMD_SET_CONVERSION_PARAMS:
+		// Set conversion parameters
+		if(nData == 4)
+		{
+			conversions.servoK 	= data[0];
+			conversions.servoM 	= data[1];
+			conversions.potK 	= data[2];
+			conversions.potM 	= data[3];
+			Serial.println("OK");
+		}
+		else
+		{
+			Serial.println("Error");
+		}
+		break;
+
+	case CMD_DISP_CONVERSION_PARAMS:
+		// Display conversion parameters
+		displayConversionParams();
+		break;
 
 	default:
 		break;
