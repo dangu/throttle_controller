@@ -24,10 +24,11 @@ CMD_ENABLE_EXT_SERVO_POS    = 'c'
 CMD_DISABLE_EXT_SERVO_POS   = 'd'
 CMD_SET_PID_SERVO           = 'e'
 CMD_SET_PID_N_ENG           = 'f'
-CMD_DISP_PID_PARAMS_SERVO   = 'g'
-CMD_DISP_PID_PARAMS_N_ENG   = 'h'
+CMD_DISP_PID_PARAMS         = 'g'
+CMD_DISP_VALUES             = 'i'
 
 RESP_DISP_PID_PARAMS        = 'G'
+RESP_DISP_VALUES            = 'I'
 
 class Sercom(serial.Serial):
     def __init__(self, port, baudrate):
@@ -36,6 +37,22 @@ class Sercom(serial.Serial):
         self.port = port
         self.baudrate = baudrate
         self.timeout = 1
+        self.msgOutQueue = []
+        
+    def writeQueued(self,cmd):
+        """Add a message to the out queue"""
+        self.msgOutQueue.append(cmd)
+        
+    def isOutQueueEmpty(self):
+        """Return true if the out queue is empty"""
+        return len(self.msgOutQueue)==0
+    
+    def processOutQueue(self):
+        """Process the out queue to send messages one by one"""
+        if len(self.msgOutQueue)>0:
+            print "Processing one message"
+            self.write(self.msgOutQueue[0])
+            self.msgOutQueue = self.msgOutQueue[1:]  # Remove the first element
 
 class Gui(tk.Frame):
     def __init__(self, parent, title, serialPort):
@@ -64,7 +81,10 @@ class Gui(tk.Frame):
         
         frameServo = tk.Frame(parent, bd=2, relief=tk.GROOVE)
         frameServo.grid(row=2,column=1)
-        
+
+        frameAD = tk.Frame(parent, bd=2, relief=tk.GROOVE)
+        frameAD.grid(row=2,column=2)
+                
         labelServo = tk.Label(framePID, text="Servo")
         labelServo.grid(row=3, column=0, sticky="e")
 
@@ -113,8 +133,8 @@ class Gui(tk.Frame):
         self.spinPidServoUMax.delete(0,"end")
         self.spinPidServoUMax.insert(tk.END,"0")
         
-        btnSetPidServo = tk.Button(framePID, text="Get", command=self.cbGetPidServo)
-        btnSetPidServo.grid(row=3, column=6, sticky="nsew", padx=2, pady=2)
+        btnSetPidServo = tk.Button(framePID, text="Get", command=self.cbGetPidParams)
+        btnSetPidServo.grid(row=3, column=6, sticky="nsew", padx=2, pady=2, rowspan = 2)
 
         btnSetPidServo = tk.Button(framePID, text="Set", command=self.cbSetPidServo)
         btnSetPidServo.grid(row=3, column=7, sticky="nsew", padx=2, pady=2)
@@ -144,9 +164,6 @@ class Gui(tk.Frame):
         self.spinPidNEngUMax.delete(0,"end")
         self.spinPidNEngUMax.insert(tk.END,"0")
 
-        btnSetPidNEng = tk.Button(framePID, text="Get", command=self.cbGetPidNEng)
-        btnSetPidNEng.grid(row=4, column=6, sticky="nsew", padx=2, pady=2)
-
         btnSetPidNEng = tk.Button(framePID, text="Set", command=self.cbSetPidNEng)
         btnSetPidNEng.grid(row=4, column=7, sticky="nsew", padx=2, pady=2)
 
@@ -157,6 +174,9 @@ class Gui(tk.Frame):
         
         checkboxRpmTarget = tk.Checkbutton(frameScales, text="Override")
         checkboxRpmTarget.grid(row=1, column=0, sticky="nsew")
+
+        btnUpdateData = tk.Button(frameScales, text="Display Data", command=self.cbDisplayData)
+        btnUpdateData.grid(row=1, column=1, sticky="nsew", padx=2, pady=2)
 
         labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
         labelScaleRpmMeasured.grid(row=0, column=1, sticky="nsew")
@@ -169,11 +189,17 @@ class Gui(tk.Frame):
         self.scaleRpmMeasured.grid(row=2, column=1)
  
         # Servo data
-        labelScaleServoPosMeasured = tk.Label(frameServo, text="Servo measured")
+        labelScaleServoPosMeasured = tk.Label(frameAD, text="Servo measured")
         labelScaleServoPosMeasured.grid(row=0, column=0, sticky="nsew")
           
-        self.scaleServoPosMeasured = tk.Scale(frameServo,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
+        self.scaleServoPosMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
         self.scaleServoPosMeasured.grid(row=1, column=0)
+        
+        labelScaleServoPosMeasured = tk.Label(frameAD, text="Pot measured")
+        labelScaleServoPosMeasured.grid(row=0, column=1, sticky="nsew")
+          
+        self.scalePotMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
+        self.scalePotMeasured.grid(row=1, column=1)
          
          
     def cbOpenCloseSerialPort(self):
@@ -218,8 +244,14 @@ class Gui(tk.Frame):
                                         self.spinPidNEngUMax,
                                         ]:
                             spinbox.delete(0,"end")
-                            spinbox.insert(tk.END,"{:f}".format(float(respList[i])))
+                            spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
+                elif cmd == RESP_DISP_VALUES:
+                    if len(respList) == (1+3):
+                        print "Data: {}".format(respList[1:])
+                        self.scaleRpmMeasured.set(float(respList[1]))
+                        self.scaleServoPosMeasured.set(float(respList[2]))
+                        self.scalePotMeasured.set(float(respList[3]))
         
     def cbScale1(self, var2):
         """Callback for scale 1"""
@@ -228,7 +260,7 @@ class Gui(tk.Frame):
     def cbReset(self):
         """Send a reset command"""
         if self.serialPort.isOpen():
-            self.serialPort.write("R\n")
+            self.serialPort.writeQueued("R\n")
 
     def cbFlash(self):
         """Flash with new software"""
@@ -257,7 +289,7 @@ class Gui(tk.Frame):
                                        self.spinPidServoD.get(),
                                        self.spinPidServoUMin.get(),
                                        self.spinPidServoUMax.get())
-            self.serialPort.write(cmd)
+            self.serialPort.writeQueued(cmd)
   
     def cbSetPidNEng(self):
         """Set the parameters for the engine speed PID"""
@@ -269,40 +301,26 @@ class Gui(tk.Frame):
                                        self.spinPidNEngD.get(),
                                        self.spinPidNEngUMin.get(),
                                        self.spinPidNEngUMax.get())
-            self.serialPort.write(cmd)
+            self.serialPort.writeQueued(cmd)
             
-    def cbGetPidServo(self):
-        """Get the parameters for the servo PID"""
+    def cbGetPidParams(self):
+        """Get the parameters for the PID controllers"""
         if self.serialPort.isOpen():
-            print "Get servo PID parameters"
-            cmd = "{}\n".format(CMD_DISP_PID_PARAMS_SERVO)
-            self.serialPort.write(cmd)
-
-    def cbGetPidNEng(self):
-        """Get the parameters for the servo PID"""
-        print "Get engine speed PID parameters"
-          
-    def read_serial(self):
-        """
-        Check for input from the serial port. On fetching a line, parse
-        the sensor values and append to the stored data and post a replot
-        request.
-        """
-        print "Read..."
-        if self.serialPort.inWaiting() != 0:
-            line = self.serialPort.readline()
-            line = line.decode('ascii').strip("\r\n")
-            if line[0:3] != "MAG":
-                print(line) # line not a valid sensor result.
-            else:
-                try:
-                    data = line.split("\t")
-                    x, y, z = data[1], data[2], data[3]
-                    self.append_values(x, y, z)
-                    self.after_idle(self.replot)
-                except Exception as e:
-                    print(e)
-        self.after(1000, self.read_serial)
+            print "Get PID parameters"
+            cmd = "{}\n".format(CMD_DISP_PID_PARAMS)
+            self.serialPort.writeQueued(cmd)
+            
+    
+    def cbDisplayData(self):
+        """Update the display data"""
+        if self.serialPort.isOpen():
+            if(self.serialPort.isOutQueueEmpty()):
+                print "Update display data"
+                cmd = "{}\n".format(CMD_DISP_VALUES)
+                self.serialPort.writeQueued(cmd)            
+                    
+            self.serialPort.processOutQueue()
+            self.after(100, self.cbDisplayData)
 
 def run():
     """Run graphics"""
