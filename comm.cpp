@@ -63,6 +63,8 @@ void displayValues()
 	Serial.print(" ");
 	Serial.print(status.potInCabRaw_u16);
 	Serial.print(" ");
+	Serial.print(status.servoPosRef_f);
+	Serial.print(" ");
 	Serial.print(status.servoPosFilt_f);
 	Serial.print(" ");
 	Serial.print(status.potInCabFilt_f);

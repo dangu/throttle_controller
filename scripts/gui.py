@@ -62,10 +62,13 @@ class Gui(tk.Frame):
         """Init"""
         tk.Frame.__init__(self, parent)
         
-        self.timerOverrideNEng = time.time()
-        self.timerOverrideServoPos = time.time()
         self.serialPort = serialPort
         self.initialHexFileDir = r"/tmp"
+        
+        self.nEngRefOverrideValue = None
+        self.extServoPosRefValue = None
+        
+        self.timerScaleUpdate = time.time()
         
         self.btnSerial=tk.Button(parent, text="Open serial port", command=self.cbOpenCloseSerialPort)
         self.btnSerial.grid(row=0,column=0)
@@ -191,7 +194,7 @@ class Gui(tk.Frame):
         labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
         labelScaleRpmMeasured.grid(row=0, column=1, sticky="nsew")
              
-        self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100, command = self.cbScaleExtNEngRef)
+        self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100)
         self.scaleExtNEngRef.set(settings.rpmStart)
         self.scaleExtNEngRef.grid(row=2, column=0)
          
@@ -249,7 +252,7 @@ class Gui(tk.Frame):
         checkboxServoOverride = tk.Checkbutton(frameAD, text="Override", var=self.servoPosRefOverrideFlag, command = self.cbServoPosRefOverride)
         checkboxServoOverride.grid(row=2, column=3, sticky="nsew")
         
-        self.scaleExtServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScaleExtServoPosRef)
+        self.scaleExtServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20)
         self.scaleExtServoPosRef.grid(row=3, column=3)
 
         self.scaleServoPosRef = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
@@ -367,12 +370,13 @@ class Gui(tk.Frame):
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
-                    if len(respList) == (1+6):
+                    if len(respList) == (1+7):
                         #print "Data: {}".format(respList[1:])
                         i=1
                         for scale in [self.scaleRpmMeasured,
                                       self.scaleServoPosMeasured,
                                       self.scalePotMeasured,
+                                      self.scaleServoPosRef,
                                       self.scaleServoPosVirtual,
                                       self.scalePotVirtual,
                                       self.servoOutput,
@@ -397,35 +401,7 @@ class Gui(tk.Frame):
     def cbScale1(self, var2):
         """Callback for scale 1"""
         #print "Value {}".format(var2)
-        
-    def cbScaleExtNEngRef(self, nEngExtRef):
-        """Callback for external engine speed reference scale
-        
-        The minimum delta time between two updates is limited to settings.minDTScaleUpdate"""
-        if self.serialPort.isOpen():
-            if(self.nEngRefOverrideFlag.get()):
-                tNow = time.time()
-                if((tNow-self.timerOverrideNEng)>settings.minDTScaleUpdate):
-                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_N_ENG,
-                                           nEngExtRef)
-                    self.serialPort.writeQueued(cmd)
-                    self.timerOverrideNEng = tNow
-
-
-    def cbScaleExtServoPosRef(self, servoPosExtRef):
-        """Callback for external servo reference position
-        
-        The minimum delta time between two updates is limited to settings.minDTScaleUpdate"""
-        if self.serialPort.isOpen():
-            if(self.servoPosRefOverrideFlag.get()):
-                tNow = time.time()
-                if((tNow-self.timerOverrideServoPos)>settings.minDTScaleUpdate):
-                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_SERVO_POS,
-                                           servoPosExtRef)
-                    self.serialPort.writeQueued(cmd)
-                    self.timerOverrideServoPos = tNow
-
-                    
+              
     def cbReset(self):
         """Send a reset command"""
         if self.serialPort.isOpen():
@@ -479,15 +455,38 @@ class Gui(tk.Frame):
             cmd = "{}\n".format(CMD_DISP_PID_PARAMS)
             self.serialPort.writeQueued(cmd)
             
-    
+    def syncAllScales(self):
+        """If there are changes made to the scales,
+        sync those with the control unit"""
+        if self.serialPort.isOpen():
+            if(self.nEngRefOverrideFlag.get()):
+                newValue = self.scaleExtNEngRef.get()
+                if(self.nEngRefOverrideValue != newValue):
+                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_N_ENG,
+                                           newValue)
+                    self.serialPort.writeQueued(cmd)
+                    self.nEngRefOverrideValue = newValue
+            if(self.servoPosRefOverrideFlag.get()):
+                newValue = self.scaleExtServoPosRef.get()
+                if(self.extServoPosRefValue != newValue):
+                    cmd = "{} {}\n".format(CMD_ENABLE_EXT_SERVO_POS,
+                                           newValue)
+                    self.serialPort.writeQueued(cmd)
+                    self.extServoPosRefValue = newValue
+
     def cbDisplayData(self):
         """Update the display data"""
         if self.serialPort.isOpen():
+            tNow = time.time()
+            if((tNow-self.timerScaleUpdate) > settings.minDTScaleUpdate):
+                self.syncAllScales()
+                self.timerScaleUpdate = tNow
             if(self.serialPort.isOutQueueEmpty()):
                 cmd = "{}\n".format(CMD_DISP_VALUES)
                 self.serialPort.writeQueued(cmd)            
                     
             self.serialPort.processOutQueue()
+            
             self.after(100, self.cbDisplayData)
             
     def cbReadConversionParams(self):
@@ -514,9 +513,7 @@ class Gui(tk.Frame):
     def cbNEngRefOverride(self):
         """Override engine speed reference"""
         if self.serialPort.isOpen():
-            if(self.nEngRefOverrideFlag.get()):
-                self.cbScaleExtNEngRef(self.scaleExtNEngRef.get())
-            else:
+            if(not self.nEngRefOverrideFlag.get()):
                 cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
                 self.serialPort.writeQueued(cmd)
 
@@ -524,9 +521,7 @@ class Gui(tk.Frame):
     def cbServoPosRefOverride(self):
         """Override servo position reference"""
         if self.serialPort.isOpen():
-            if(self.servoPosRefOverrideFlag.get()):
-                self.cbScaleExtServoPosRef(self.scaleExtServoPosRef.get())
-            else:
+            if(not self.servoPosRefOverrideFlag.get()):
                 cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
                 self.serialPort.writeQueued(cmd)
         

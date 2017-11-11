@@ -135,7 +135,6 @@ void loop() {
   static uint32_t wCounterTempOld;
   static uint32_t millisOld;
   float nEngRefTemp;
-  float servoPosRefTemp;
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
 
@@ -143,6 +142,7 @@ void loop() {
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
   status.potInCabRaw_u16 = analogRead(REF_IN);
   getNEngSample();
+  status.nEng_f = 400.0; // Remove this! Only for test
 
   status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
   status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
@@ -175,14 +175,14 @@ void loop() {
   if(status.servoPosRefExtEnable)
   {
 	  // Use external servo position reference
-	  servoPosRefTemp = status.servoPosRefExt_f;
+	  status.servoPosRef_f = status.servoPosRefExt_f;
   }
   else
   {
 	  // Use internal servo position reference
-	  servoPosRefTemp = u_pid_n_eng;
+	  status.servoPosRef_f = u_pid_n_eng;
   }
-  if(pid_servo.calculate((double)servoPosRefTemp, (double)status.servoPosFilt_f))
+  if(pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
   {
     status.servoOutput_u16=(int)pid_servo.getOutput();
     // Stop motor if the output is small enough

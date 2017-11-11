@@ -11,9 +11,10 @@ typedef struct {
 
 	uint16_t	nEngRef_u16;			//!< Engine speed reference
 	uint16_t	nEngRefExt_u16;			//!< External engine speed reference
-	float		servoPosRefExt_f;		//!< External servo position
 	float		nEng_f;					//!< Measured engine speed
 	float		nEngFilt_f;				//!< Filtered engine speed
+	float		servoPosRefExt_f;		//!< External servo position
+	float		servoPosRef_f;			//!< Internal servo position
 	uint16_t	servoPosRaw_u16;		//!< Measured servo position (A/D-converter value)
 	float		servoPos_f;				//!< Converted servo position (0.0-100.0)
 	float		servoPosFilt_f;			//!< Filtered servo position
