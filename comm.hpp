@@ -17,6 +17,7 @@ typedef struct {
 	uint16_t	servoPosRaw_u16;		//!< Measured servo position (A/D-converter value)
 	float		servoPos_f;				//!< Converted servo position (0.0-100.0)
 	float		servoPosFilt_f;			//!< Filtered servo position
+	int16_t		servoOutput_u16;		//!< Output signal to servo
 	uint16_t	potInCabRaw_u16;		//!< Measured cab potentiometer value (A/D-converter value)
 	float		potInCab_f;				//!< Converted cab potentiometer value (0.0-100.0
 	float		potInCabFilt_f;			//!< Filtered cab potentiometer value

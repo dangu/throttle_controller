@@ -177,8 +177,9 @@ class Gui(tk.Frame):
         labelScaleRpmTarget = tk.Label(frameScales, text="Target RPM")
         labelScaleRpmTarget.grid(row=0, column=0, sticky="nsew")
         
-        checkboxRpmTarget = tk.Checkbutton(frameScales, text="Override")
-        checkboxRpmTarget.grid(row=1, column=0, sticky="nsew")
+        self.nEngRefOverrideFlag = tk.IntVar()
+        checkboxNEngOverride = tk.Checkbutton(frameScales, text="Override", var=self.nEngRefOverrideFlag, command=self.cbNEngRefOverride)
+        checkboxNEngOverride.grid(row=1, column=0, sticky="nsew")
 
         btnUpdateData = tk.Button(frameScales, text="Display Data", command=self.cbDisplayData)
         btnUpdateData.grid(row=1, column=1, sticky="nsew", padx=2, pady=2)
@@ -205,7 +206,8 @@ class Gui(tk.Frame):
         labelScaleServoPosVirtual.grid(row=0, column=4, sticky="nsew")
         labelScalePotVirtual = tk.Label(frameAD, text="Pot virtual")
         labelScalePotVirtual.grid(row=0, column=5, sticky="nsew")
-            
+        labelScalePotVirtual = tk.Label(frameAD, text="Servo output")
+        labelScalePotVirtual.grid(row=0, column=6, sticky="nsew")            
         labelMin = tk.Label(frameAD, text="Min")
         labelMin.grid(row=1, column=0, sticky="nsew")
         labelMax = tk.Label(frameAD, text="Max")
@@ -237,8 +239,9 @@ class Gui(tk.Frame):
         self.scalePotMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, command = self.cbScale1)
         self.scalePotMeasured.grid(row=3, column=2)
 
-        checkboxServoTarget = tk.Checkbutton(frameAD, text="Override")
-        checkboxServoTarget.grid(row=2, column=3, sticky="nsew")
+        self.servoPosRefOverrideFlag = tk.IntVar()
+        checkboxServoOverride = tk.Checkbutton(frameAD, text="Override", var=self.servoPosRefOverrideFlag, command = self.cbServoPosRefOverride)
+        checkboxServoOverride.grid(row=2, column=3, sticky="nsew")
         
         self.scaleServoPosTarget = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, tickinterval=20, command = self.cbScale1)
         self.scaleServoPosTarget.grid(row=3, column=3)
@@ -248,7 +251,9 @@ class Gui(tk.Frame):
       
         self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength, command = self.cbScale1)
         self.scalePotVirtual.grid(row=3, column=5)
-                
+
+        self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, command = self.cbScale1)
+        self.servoOutput.grid(row=3, column=6)                
         # Converstion
         btnReadConversion=tk.Button(frameConvert, text="Read conversion params", command=self.cbReadConversionParams)
         btnReadConversion.grid(row=1,column=10)
@@ -353,7 +358,7 @@ class Gui(tk.Frame):
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
-                    if len(respList) == (1+5):
+                    if len(respList) == (1+6):
                         print "Data: {}".format(respList[1:])
                         i=1
                         for scale in [self.scaleRpmMeasured,
@@ -361,6 +366,7 @@ class Gui(tk.Frame):
                                       self.scalePotMeasured,
                                       self.scaleServoPosVirtual,
                                       self.scalePotVirtual,
+                                      self.servoOutput,
                                       ]:
                             scale.set(float(respList[i]))
                             i+=1    
@@ -468,6 +474,24 @@ class Gui(tk.Frame):
                                             self.spinAFiltNEng.get())
             self.serialPort.writeQueued(cmd)
             
+    def cbNEngRefOverride(self):
+        """Override engine speed reference"""
+        print "Override engine speed reference {}".format(self.nEngRefOverrideFlag.get())
+        if(self.nEngRefOverrideFlag.get()):
+            cmd = "{}\n".format(CMD_ENABLE_EXT_N_ENG)
+        else:
+            cmd = "{}\n".format(CMD_DISABLE_EXT_N_ENG)
+        self.serialPort.writeQueued(cmd)
+        
+    def cbServoPosRefOverride(self):
+        """Override servo position reference"""
+        print "Override servo position reference {}".format(self.servoPosRefOverrideFlag.get())
+        if(self.nEngRefOverrideFlag.get()):
+            cmd = "{}\n".format(CMD_ENABLE_EXT_SERVO_POS)
+        else:
+            cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
+        self.serialPort.writeQueued(cmd)    
+        
 def run():
     """Run graphics"""
     root = tk.Tk()

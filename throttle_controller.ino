@@ -122,7 +122,6 @@ void loop() {
   static int ref = 500;
   static int refSerial = 800; //!< rpm value from serial input
   int refIn;  //!< Analog reference value input
-  int u;
   int t;
   static unsigned int ct;
   static int tOld;
@@ -185,16 +184,16 @@ void loop() {
   }
   if(pid_servo.calculate((double)servoPosRefTemp, (double)status.servoPosFilt_f))
   {
-    u=(int)pid_servo.getOutput();
+    status.servoOutput_u16=(int)pid_servo.getOutput();
     // Stop motor if the output is small enough
     // or if user pressed '0'
-    if((abs(u)<40) || forceMotorStopped)
+    if((abs(status.servoOutput_u16)<40) || forceMotorStopped)
     {
       motor.stop();
     }
     else
     {
-      motor.speed(u);
+      motor.speed(status.servoOutput_u16);
     }
 
     if((millis()-millisOld)> 100)
