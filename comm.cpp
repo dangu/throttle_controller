@@ -33,6 +33,10 @@ void handleCommand(uint8_t rxBuf[])
 		reboot();
 		break;
 
+	case 'S':
+		reboot2();
+		break;
+
 	case 'a':
 		if(nData == 1)
 		{

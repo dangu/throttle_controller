@@ -2,5 +2,6 @@
 #define SYSTEM_H
 
 void reboot();
+void reboot2();
 
 #endif
