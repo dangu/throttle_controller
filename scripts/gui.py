@@ -265,29 +265,42 @@ class Gui(tk.Frame):
         labelK = tk.Label(frameConvert, text="k")
         labelK.grid(row=0, column=1, sticky="nsew")
         
-        labelX = tk.Label(frameConvert, text="x")
+        labelX = tk.Label(frameConvert, text="m")
         labelX.grid(row=0, column=2, sticky="nsew")
 
-        self.spinServoK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        labelAFilt = tk.Label(frameConvert, text="Filter constant")
+        labelAFilt.grid(row=0, column=3, sticky="nsew")
+
+        self.spinServoK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
         self.spinServoK.grid(row=1, column=1, sticky="e")
         self.spinServoK.delete(0,"end")
         self.spinServoK.insert(tk.END,"0")
         
-        self.spinServoM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
         self.spinServoM.grid(row=1, column=2, sticky="e")
         self.spinServoM.delete(0,"end")
         self.spinServoM.insert(tk.END,"0")
         
-        self.spinPotK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
         self.spinPotK.grid(row=2, column=1, sticky="e")
         self.spinPotK.delete(0,"end")
         self.spinPotK.insert(tk.END,"0")
         
-        self.spinPotM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
         self.spinPotM.grid(row=2, column=2, sticky="e")
         self.spinPotM.delete(0,"end")
         self.spinPotM.insert(tk.END,"0") 
-                       
+
+        self.spinAFiltServo = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1, increment=0.1)
+        self.spinAFiltServo.grid(row=1, column=3, sticky="e")
+        self.spinAFiltServo.delete(0,"end")
+        self.spinAFiltServo.insert(tk.END,"0") 
+        
+        self.spinAFiltPot = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1, increment=0.1)
+        self.spinAFiltPot.grid(row=2, column=3, sticky="e")
+        self.spinAFiltPot.delete(0,"end")
+        self.spinAFiltPot.insert(tk.END,"0")  
+                              
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
         if self.serialPort.isOpen():
@@ -301,9 +314,8 @@ class Gui(tk.Frame):
         """Read serial port"""
         if self.serialPort.isOpen():
             if self.serialPort.inWaiting() != 0:
-                print "Waiting..."
                 line = self.serialPort.readline()
-                print "Rx: {}".format(line.strip())
+               # print "Rx: {}".format(line.strip())
                 self.handleResponse(line)
             
             self.after(10, self.cbReadSerialPort)
@@ -333,26 +345,34 @@ class Gui(tk.Frame):
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
-                    if len(respList) == (1+3):
+                    if len(respList) == (1+5):
                         print "Data: {}".format(respList[1:])
-                        self.scaleRpmMeasured.set(float(respList[1]))
-                        self.scaleServoPosMeasured.set(float(respList[2]))
-                        self.scalePotMeasured.set(float(respList[3]))
+                        i=1
+                        for scale in [self.scaleRpmMeasured,
+                                      self.scaleServoPosMeasured,
+                                      self.scalePotMeasured,
+                                      self.scaleServoPosVirtual,
+                                      self.scalePotVirtual,
+                                      ]:
+                            scale.set(float(respList[i]))
+                            i+=1    
                 elif cmd == RESP_DISP_CONVERSION_PARAMS:
-                    if len(respList) == (1+4):
+                    if len(respList) == (1+6):
                         i=1
                         print "Data: {}".format(respList[1:])
                         for spinbox in [self.spinServoK,
                                         self.spinServoM,
                                         self.spinPotK,
-                                        self.spinPotM]:
+                                        self.spinPotM,
+                                        self.spinAFiltServo,
+                                        self.spinAFiltPot]:
                             spinbox.delete(0,"end")
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1                            
         
     def cbScale1(self, var2):
         """Callback for scale 1"""
-        print "Value {}".format(var2)
+        #print "Value {}".format(var2)
         
     def cbReset(self):
         """Send a reset command"""
@@ -429,11 +449,13 @@ class Gui(tk.Frame):
         """Write conversion parameters"""
         if self.serialPort.isOpen():
             print "Write conversion parameters"
-            cmd = "{} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
+            cmd = "{} {} {} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
                                             self.spinServoK.get(),
                                             self.spinServoM.get(),
                                             self.spinPotK.get(),
-                                            self.spinPotM.get())
+                                            self.spinPotM.get(),
+                                            self.spinAFiltServo.get(),
+                                            self.spinAFiltPot.get())
             self.serialPort.writeQueued(cmd)
             
 def run():

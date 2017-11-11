@@ -13,7 +13,11 @@ typedef struct {
 	float		servoPosExt_f;			//!< External servo position
 	float		nEng_f;					//!< Measured engine speed
 	uint16_t	servoPosRaw_u16;		//!< Measured servo position (A/D-converter value)
+	float		servoPos_f;				//!< Converted servo position (0.0-100.0)
+	float		servoPosFilt_f;			//!< Filtered servo position
 	uint16_t	potInCabRaw_u16;		//!< Measured cab potentiometer value (A/D-converter value)
+	float		potInCab_f;				//!< Converted cab potentiometer value (0.0-100.0
+	float		potInCabFilt_f;			//!< Filtered cab potentiometer value
 }status_t;
 
 typedef struct {
@@ -21,6 +25,8 @@ typedef struct {
 	float		servoM;					//!< y=kx+m parameter for servo
 	float		potK;					//!< y=kx+m parameter for pot
 	float		potM;					//!< y=kx+m parameter for pot
+	float		aFiltServo_f;			//!< Filter constant servo
+	float		aFiltPot_f;				//!< Filter constant pot
 }conversions_t;
 
 #endif

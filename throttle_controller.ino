@@ -69,10 +69,12 @@ void setup() {
   pid_n_eng.setPGain(0.1);
 
   // Setup conversion parameters
-  conversions.servoK 	= -0.1445086705;
-  conversions.servoM 	= 141.6184;
-  conversions.potK 		= 0.1976284585;
-  conversions.potM 		= -102.3715415;
+  conversions.servoK 		= -0.1445086705;
+  conversions.servoM 		= 141.6184;
+  conversions.potK 			= 0.1976284585;
+  conversions.potM 			= -102.3715415;
+  conversions.aFiltServo_f 	= 0.5;
+  conversions.aFiltPot_f 	= 0.5;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);
@@ -128,6 +130,15 @@ void loop() {
 
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
   status.potInCabRaw_u16 = analogRead(REF_IN);
+
+  status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
+  status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
+
+  // Create filtered values
+  status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
+  status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
+
+
 
   // Min 518
   // Max 907 875

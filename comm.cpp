@@ -57,6 +57,10 @@ void displayValues()
 	Serial.print(status.servoPosRaw_u16);
 	Serial.print(" ");
 	Serial.print(status.potInCabRaw_u16);
+	Serial.print(" ");
+	Serial.print(status.servoPosFilt_f);
+	Serial.print(" ");
+	Serial.print(status.potInCabFilt_f);
 	Serial.print('\n');
 }
 
@@ -72,6 +76,10 @@ void displayConversionParams()
 	Serial.print(conversions.potK,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
 	Serial.print(conversions.potM,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.aFiltServo_f,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.aFiltPot_f,DECIMALS_IN_DISPLAY);
 	Serial.print('\n');
 }
 
@@ -124,7 +132,7 @@ void handleCommand(uint8_t rxBuf[])
 {
 	char delimiter[] = " ";
 	char *cmd, *strData;
-	float data[5];
+	float data[10];
 	uint8_t nData=0;
 
 	cmd = strtok((char *)rxBuf, delimiter);
@@ -232,12 +240,14 @@ void handleCommand(uint8_t rxBuf[])
 
 	case CMD_SET_CONVERSION_PARAMS:
 		// Set conversion parameters
-		if(nData == 4)
+		if(nData == 6)
 		{
-			conversions.servoK 	= data[0];
-			conversions.servoM 	= data[1];
-			conversions.potK 	= data[2];
-			conversions.potM 	= data[3];
+			conversions.servoK 			= data[0];
+			conversions.servoM 			= data[1];
+			conversions.potK 			= data[2];
+			conversions.potM 			= data[3];
+			conversions.aFiltServo_f 	= data[4];
+			conversions.aFiltPot_f 		= data[5];
 			Serial.println("OK");
 		}
 		else
