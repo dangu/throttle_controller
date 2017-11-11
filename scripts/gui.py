@@ -181,9 +181,15 @@ class Gui(tk.Frame):
 
  
         # RPM data
-        labelScaleRpmTarget = tk.Label(frameScales, text="Target RPM")
-        labelScaleRpmTarget.grid(row=0, column=0, sticky="nsew")
+        labelScaleExtNEngRef = tk.Label(frameScales, text="Ext Target RPM")
+        labelScaleExtNEngRef.grid(row=0, column=0, sticky="nsew")
+
+        labelScaleNEngRef = tk.Label(frameScales, text="Target RPM")
+        labelScaleNEngRef.grid(row=0, column=1, sticky="nsew")
         
+        labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
+        labelScaleRpmMeasured.grid(row=0, column=2, sticky="nsew")
+                
         self.nEngRefOverrideFlag = tk.IntVar()
         checkboxNEngOverride = tk.Checkbutton(frameScales, text="Override", var=self.nEngRefOverrideFlag, command=self.cbNEngRefOverride)
         checkboxNEngOverride.grid(row=1, column=0, sticky="nsew")
@@ -191,15 +197,18 @@ class Gui(tk.Frame):
         btnUpdateData = tk.Button(frameScales, text="Display Data", command=self.cbDisplayData)
         btnUpdateData.grid(row=1, column=1, sticky="nsew", padx=2, pady=2)
 
-        labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
-        labelScaleRpmMeasured.grid(row=0, column=1, sticky="nsew")
+
              
         self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100)
         self.scaleExtNEngRef.set(settings.rpmStart)
         self.scaleExtNEngRef.grid(row=2, column=0)
-         
+
+        self.scaleNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=100)
+        self.scaleNEngRef.set(settings.rpmStart)
+        self.scaleNEngRef.grid(row=2, column=1)
+                 
         self.scaleRpmMeasured = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, command = self.cbScale1)
-        self.scaleRpmMeasured.grid(row=2, column=1)
+        self.scaleRpmMeasured.grid(row=2, column=2)
  
         # A/D converter
         labelScaleServoPosMeasured = tk.Label(frameAD, text="Servo measured")
@@ -291,6 +300,12 @@ class Gui(tk.Frame):
         labelAFilt = tk.Label(frameConvert, text="Filter constant")
         labelAFilt.grid(row=0, column=3, sticky="nsew")
 
+        labelNEngRefMin = tk.Label(frameConvert, text="Min")
+        labelNEngRefMin.grid(row=0, column=4, sticky="nsew")
+        
+        labelNEngRefMax = tk.Label(frameConvert, text="Max")
+        labelNEngRefMax.grid(row=0, column=5, sticky="nsew")
+        
         self.spinServoK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
         self.spinServoK.grid(row=1, column=1, sticky="e")
         self.spinServoK.delete(0,"end")
@@ -325,7 +340,17 @@ class Gui(tk.Frame):
         self.spinAFiltNEng.grid(row=3, column=3, sticky="e")
         self.spinAFiltNEng.delete(0,"end")
         self.spinAFiltNEng.insert(tk.END,"0")  
-                              
+
+        self.spinNEngRefMin = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=2400, increment=1)
+        self.spinNEngRefMin.grid(row=3, column=4, sticky="e")
+        self.spinNEngRefMin.delete(0,"end")
+        self.spinNEngRefMin.insert(tk.END,"0")  
+        
+        self.spinNEngRefMax = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=2400, increment=1)
+        self.spinNEngRefMax.grid(row=3, column=5, sticky="e")
+        self.spinNEngRefMax.delete(0,"end")
+        self.spinNEngRefMax.insert(tk.END,"0")     
+                                   
     def cbOpenCloseSerialPort(self):
         """Open or close serial port"""
         if self.serialPort.isOpen():
@@ -370,10 +395,11 @@ class Gui(tk.Frame):
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
-                    if len(respList) == (1+7):
+                    if len(respList) == (1+8):
                         #print "Data: {}".format(respList[1:])
                         i=1
-                        for scale in [self.scaleRpmMeasured,
+                        for scale in [self.scaleNEngRef,
+                                      self.scaleRpmMeasured,
                                       self.scaleServoPosMeasured,
                                       self.scalePotMeasured,
                                       self.scaleServoPosRef,
@@ -384,7 +410,7 @@ class Gui(tk.Frame):
                             scale.set(float(respList[i]))
                             i+=1    
                 elif cmd == RESP_DISP_CONVERSION_PARAMS:
-                    if len(respList) == (1+7):
+                    if len(respList) == (1+9):
                         i=1
                         print "Data: {}".format(respList[1:])
                         for spinbox in [self.spinServoK,
@@ -393,7 +419,9 @@ class Gui(tk.Frame):
                                         self.spinPotM,
                                         self.spinAFiltServo,
                                         self.spinAFiltPot,
-                                        self.spinAFiltNEng]:
+                                        self.spinAFiltNEng,
+                                        self.spinNEngRefMin,
+                                        self.spinNEngRefMax]:
                             spinbox.delete(0,"end")
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1                            

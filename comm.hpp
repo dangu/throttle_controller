@@ -32,6 +32,8 @@ typedef struct {
 	float		aFiltServo_f;			//!< Filter constant servo
 	float		aFiltPot_f;				//!< Filter constant pot
 	float		aFiltNEng_f;			//!< Filter constant engine speed
+	uint16_t	nEngRefMin;				//!< Min allowed engine speed reference
+	uint16_t	nEngRefMax;				//!< Max allowed engine speed reference
 }conversions_t;
 
 #endif

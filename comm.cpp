@@ -57,6 +57,8 @@ void displayValues()
 {
 	Serial.print(RESP_DISP_VALUES);
 	Serial.print(" ");
+	Serial.print(status.nEngRef_u16);
+	Serial.print(" ");
 	Serial.print(status.nEng_f);
 	Serial.print(" ");
 	Serial.print(status.servoPosRaw_u16);
@@ -91,6 +93,10 @@ void displayConversionParams()
 	Serial.print(conversions.aFiltPot_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
 	Serial.print(conversions.aFiltNEng_f,DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(conversions.nEngRefMin);
+	Serial.print(" ");
+	Serial.print(conversions.nEngRefMax);
 	Serial.print('\n');
 }
 

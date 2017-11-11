@@ -111,6 +111,8 @@ void setup() {
   conversions.aFiltServo_f 	= 0.5;
   conversions.aFiltPot_f 	= 0.5;
   conversions.aFiltNEng_f	= 0.5;
+  conversions.nEngRefMin	= 400;
+  conversions.nEngRefMax	= 2400;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
     pinMode(LED_BUILTIN, OUTPUT);
@@ -134,9 +136,9 @@ void loop() {
   uint32_t wCounterTemp;
   static uint32_t wCounterTempOld;
   static uint32_t millisOld;
-  float nEngRefTemp;
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
+  float nEngFromPotTemp;
 
   // Inputs
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
@@ -157,14 +159,26 @@ void loop() {
   if(status.nEngRefExtEnable)
   {
 	  // Use external engine speed reference
-	  nEngRefTemp = (float)status.nEngRefExt_u16;
+	  status.nEngRef_u16 = (float)status.nEngRefExt_u16;
   }
   else
   {
 	  // Use internal engine speed reference
-	  nEngRefTemp = (float)status.nEngRef_u16;
+
+	  // Limit the pot reference value
+	  nEngFromPotTemp = status.potInCabFilt_f;
+	  if(nEngFromPotTemp<conversions.nEngRefMin)
+	  {
+		  nEngFromPotTemp = conversions.nEngRefMin;
+	  }
+	  else if(nEngFromPotTemp>conversions.nEngRefMax)
+	  {
+		  nEngFromPotTemp = conversions.nEngRefMax;
+	  }
+
+	  status.nEngRef_u16 = nEngFromPotTemp;
   }
-  if(pid_n_eng.calculate((double)nEngRefTemp, (double)status.nEngFilt_f))
+  if(pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f))
   {
 	  u_pid_n_eng = pid_n_eng.getOutput();
   }
