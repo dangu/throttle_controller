@@ -10,25 +10,35 @@ extern PID pid_n_eng;
 #define CMD_DISP_VALUES				'i'
 #define RESP_DISP_VALUES 			'I'
 
-#define CMD_DISP_PID_PARAMS_SERVO	'g'
-#define CMD_DISP_PID_PARAMS_N_ENG	'h'
+#define CMD_DISP_PID_PARAMS			'g'
 #define RESP_DISP_PID_PARAMS 		'G'
 
 #define DECIMALS_IN_DISPLAY	5
 
-void displayPIDParams(PID *pid)
+void displayPIDParams()
 {
 	Serial.print(RESP_DISP_PID_PARAMS);
 	Serial.print(" ");
-	Serial.print(pid->getPGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(pid_servo.getPGain(),DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(pid->getIGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(pid_servo.getIGain(),DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(pid->getDGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(pid_servo.getDGain(),DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(pid->getUMin(),DECIMALS_IN_DISPLAY);
+	Serial.print(pid_servo.getUMin(),DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.println(pid->getUMax(),DECIMALS_IN_DISPLAY);
+	Serial.print(pid_servo.getUMax(),DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(pid_n_eng.getPGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(pid_n_eng.getIGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(pid_n_eng.getDGain(),DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(pid_n_eng.getUMin(),DECIMALS_IN_DISPLAY);
+	Serial.print(" ");
+	Serial.print(pid_n_eng.getUMax(),DECIMALS_IN_DISPLAY);
+	Serial.print('\n');
 }
 
 void displayValues()
@@ -45,7 +55,7 @@ void displayValues()
 
 void handleSerialComm()
 {
-	static uint8_t rxBuf[30];
+	static uint8_t rxBuf[100];
 	static uint8_t rxBufIn;
 
 	if(Serial.available() > 0)
@@ -188,14 +198,9 @@ void handleCommand(uint8_t rxBuf[])
 		}
 		break;
 
-	case CMD_DISP_PID_PARAMS_SERVO:
-		// Get servo PID parameters
-		displayPIDParams(&pid_servo);
-		break;
-
-	case CMD_DISP_PID_PARAMS_N_ENG:
-		// Get engine speed PID parameters
-		displayPIDParams(&pid_n_eng);
+	case CMD_DISP_PID_PARAMS:
+		// Get PID parameters
+		displayPIDParams();
 		break;
 
 	case CMD_DISP_VALUES:
