@@ -236,30 +236,30 @@ class Gui(tk.Frame):
         labelMax = tk.Label(frameAD, text="Max")
         labelMax.grid(row=2, column=0, sticky="nsew")
                 
-        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
         self.spinServoMinAD.grid(row=1, column=1, sticky="e")
         self.spinServoMinAD.delete(0,"end")
         self.spinServoMinAD.insert(tk.END,"0")
 
-        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
         self.spinServoMaxAD.grid(row=2, column=1, sticky="e")
         self.spinServoMaxAD.delete(0,"end")
         self.spinServoMaxAD.insert(tk.END,"0")
         
-        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
         self.spinPotMinAD.grid(row=1, column=2, sticky="e")
         self.spinPotMinAD.delete(0,"end")
         self.spinPotMinAD.insert(tk.END,"0")
 
-        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1024, increment=1)
+        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
         self.spinPotMaxAD.grid(row=2, column=2, sticky="e")
         self.spinPotMaxAD.delete(0,"end")
         self.spinPotMaxAD.insert(tk.END,"0")
           
-        self.scaleServoPosMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
+        self.scaleServoPosMeasured = tk.Scale(frameAD,  from_=1023, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
         self.scaleServoPosMeasured.grid(row=3, column=1)
       
-        self.scalePotMeasured = tk.Scale(frameAD,  from_=1024, to=0, length=settings.scalesLength, command = self.cbScale1)
+        self.scalePotMeasured = tk.Scale(frameAD,  from_=1023, to=0, length=settings.scalesLength, command = self.cbScale1)
         self.scalePotMeasured.grid(row=3, column=2)
 
         self.servoPosRefOverrideFlag = tk.IntVar()
