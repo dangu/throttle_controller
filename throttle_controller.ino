@@ -100,19 +100,21 @@ void setup() {
   Serial.println(WDTCSR, BIN);
   motor.init();
   pid_servo.init();
+  pid_servo.setPGain(15.0);
   pid_n_eng.init();
   pid_n_eng.setPGain(0.1);
+  pid_n_eng.setIGain(0.1);
   pid_n_eng.setUMin(0.0);
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
-  conversions.servoK 		= -0.1445086705;
-  conversions.servoM 		= 141.6184;
-  conversions.potK 			= 0.1976284585;
-  conversions.potM 			= -102.3715415;
+  conversions.servoK 		= -0.1667;
+  conversions.servoM 		= 150;
+  conversions.potK 			= 3;
+  conversions.potM 			= -800;
   conversions.aFiltServo_f 	= 0.5;
-  conversions.aFiltPot_f 	= 0.5;
-  conversions.aFiltNEng_f	= 0.5;
+  conversions.aFiltPot_f 	= 0.1;
+  conversions.aFiltNEng_f	= 0.1;
   conversions.nEngRefMin	= 400;
   conversions.nEngRefMax	= 2400;
 
@@ -209,7 +211,8 @@ void loop() {
     }
     else
     {
-      motor.speed(status.servoOutput_u16);
+    	// Inverse output
+      motor.speed(-status.servoOutput_u16);
     }
 
     if((millis()-millisOld)> 100)

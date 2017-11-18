@@ -236,22 +236,22 @@ class Gui(tk.Frame):
         labelMax = tk.Label(frameAD, text="Max")
         labelMax.grid(row=2, column=0, sticky="nsew")
                 
-        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbServoKM)
         self.spinServoMinAD.grid(row=1, column=1, sticky="e")
         self.spinServoMinAD.delete(0,"end")
         self.spinServoMinAD.insert(tk.END,"0")
 
-        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbServoKM)
         self.spinServoMaxAD.grid(row=2, column=1, sticky="e")
         self.spinServoMaxAD.delete(0,"end")
         self.spinServoMaxAD.insert(tk.END,"0")
         
-        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbPotKM)
         self.spinPotMinAD.grid(row=1, column=2, sticky="e")
         self.spinPotMinAD.delete(0,"end")
         self.spinPotMinAD.insert(tk.END,"0")
 
-        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbPotKM)
         self.spinPotMaxAD.grid(row=2, column=2, sticky="e")
         self.spinPotMaxAD.delete(0,"end")
         self.spinPotMaxAD.insert(tk.END,"0")
@@ -275,7 +275,7 @@ class Gui(tk.Frame):
         self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scaleServoPosVirtual.grid(row=3, column=5)
       
-        self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
+        self.scalePotVirtual = tk.Scale(frameAD,  from_=2500, to=0, length=settings.scalesLength)
         self.scalePotVirtual.grid(row=3, column=6)
 
         self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, tickinterval=50)
@@ -402,6 +402,9 @@ class Gui(tk.Frame):
                 elif cmd == RESP_DISP_VALUES:
                     if len(respList) == (1+8):
                         #print "Data: {}".format(respList[1:])
+                        f1=open("log.txt", "a")
+                        f1.write(response)
+                        f1.close()
                         i=1
                         for scale in [self.scaleNEngRef,
                                       self.scaleRpmMeasured,
@@ -557,6 +560,15 @@ class Gui(tk.Frame):
             if(not self.servoPosRefOverrideFlag.get()):
                 cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
                 self.serialPort.writeQueued(cmd)
+                
+    def cbServoKM(self):
+        """Calculate the kx+m parameters for servo"""
+        print "cbServoKM"
+        
+    def cbPotKM(self):
+        """Calculate the kx+m parameters for pot"""
+        print "cbPotKM"
+        
         
 def run():
     """Run graphics"""
