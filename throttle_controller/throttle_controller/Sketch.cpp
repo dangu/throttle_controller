@@ -12,10 +12,10 @@ void wInterrupt();
 //End of Auto generated function prototypes by Atmel Studio
 
 /**
- * Motor calibration			Connected
- * Idle position: 			980 980
- * Full throttle position:	50	288
- */
+* Motor calibration			Connected
+* Idle position: 			980 980
+* Full throttle position:	50	288
+*/
 
 
 #define MOTOR_PWM 9
@@ -46,50 +46,50 @@ conversions_t	conversions;
 /** @brief Get one sample of the engine speed */
 void getNEngSample()
 {
-	// Critical region:
-	// The interrupts need to be turned off before reading the
-	// variables used inside the interrupt routine
-	noInterrupts();
-	/*    wMicrosDiffTemp = wMicrosDiff;
-wMillisDiffTemp = wMillisDiff;
-wMillisNowTemp = wMillisNow;
-wMicrosNowTemp = wMicrosNow;
-wCounterTemp = wCounter;*/
+  // Critical region:
+  // The interrupts need to be turned off before reading the
+  // variables used inside the interrupt routine
+  noInterrupts();
+  /*    wMicrosDiffTemp = wMicrosDiff;
+  wMillisDiffTemp = wMillisDiff;
+  wMillisNowTemp = wMillisNow;
+  wMicrosNowTemp = wMicrosNow;
+  wCounterTemp = wCounter;*/
 
-	if(wMicrosDiff == 0)
-	{
-		status.nEng_f=0;
-	}
-	else
-	{
-		status.nEng_f=4*1000000/wMicrosDiff;
-	}
+  if(wMicrosDiff == 0)
+  {
+    status.nEng_f=0;
+  }
+  else
+  {
+    status.nEng_f=4*1000000/wMicrosDiff;
+  }
 
-	// Double buffered list
-	if(wMicrosDiffListPtr == wMicrosDiffList)
-	{
-		wMicrosDiffListPtr = wMicrosDiffList2;
-		wMicrosDiffListPtrToPrint = wMicrosDiffList;
-	}
-	else
-	{
-		wMicrosDiffListPtr = wMicrosDiffList;
-		wMicrosDiffListPtrToPrint = wMicrosDiffList2;
-	}
-	interrupts();
+  // Double buffered list
+  if(wMicrosDiffListPtr == wMicrosDiffList)
+  {
+    wMicrosDiffListPtr = wMicrosDiffList2;
+    wMicrosDiffListPtrToPrint = wMicrosDiffList;
+  }
+  else
+  {
+    wMicrosDiffListPtr = wMicrosDiffList;
+    wMicrosDiffListPtrToPrint = wMicrosDiffList2;
+  }
+  interrupts();
 }
 
 // the setup routine runs once when you press reset:
 void setup() {
-//  wdt_disable();
+  //  wdt_disable();
 
   Serial.begin(19200);
   Serial.print("MCUSR WDTCSR: ");
   Serial.println(MCUSR, BIN);
   Serial.println(WDTCSR, BIN);
-    cli();
-    wdt_reset();
-    /* Clear WDRF in MCUSR */
+  cli();
+  wdt_reset();
+  /* Clear WDRF in MCUSR */
   MCUSR &= ~(1<<WDRF);
   /* Write logical one to WDCE and WDE */
   /* Keep old prescaler serring to prevent unintentional time-out */
@@ -122,8 +122,105 @@ void setup() {
   conversions.nEngRefMax	= 2400;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
-    pinMode(LED_BUILTIN, OUTPUT);
-   
+  pinMode(LED_BUILTIN, OUTPUT);
+  
+}
+
+/**@brief
+Handle all inputs
+*/
+void handleInputs(, float &u_pid_n_eng)
+{
+  float nEngFromPotTemp;
+  
+  // Inputs
+  status.servoPosRaw_u16 = analogRead(MOTOR_POS);
+  status.potInCabRaw_u16 = analogRead(REF_IN);
+  getNEngSample();
+  // status.nEng_f = 400.0; // Remove this! Only for test
+
+  // y=kx+m conversion of the inputs
+  status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
+  status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
+
+  // Create filtered values
+  status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
+  status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
+  status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
+
+
+  // Engine speed PID calculation
+  if(status.nEngRefExtEnable)
+  {
+    // Use external engine speed reference
+    status.nEngRef_u16 = (float)status.nEngRefExt_u16;
+  }
+  else
+  {
+    // Use internal engine speed reference
+
+    // Limit the pot reference value
+    nEngFromPotTemp = status.potInCabFilt_f;
+    if(nEngFromPotTemp<conversions.nEngRefMin)
+    {
+      nEngFromPotTemp = conversions.nEngRefMin;
+    }
+    else if(nEngFromPotTemp>conversions.nEngRefMax)
+    {
+      nEngFromPotTemp = conversions.nEngRefMax;
+    }
+
+    status.nEngRef_u16 = nEngFromPotTemp;
+  }
+  if(pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f))
+  {
+    u_pid_n_eng = pid_n_eng.getOutput();
+  }
+}
+
+void calculate()
+{
+  float u_pid_n_eng;
+  bool forceMotorStopped
+  static uint32_t millisOld;
+
+  // Servo PID calculation
+
+  if(status.servoPosRefExtEnable)
+  {
+    // Use external servo position reference
+    status.servoPosRef_f = status.servoPosRefExt_f;
+  }
+  else
+  {
+    // Use internal servo position reference
+    status.servoPosRef_f = u_pid_n_eng;
+  }
+  if(pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
+  {
+    status.servoOutput_u16=(int)pid_servo.getOutput();
+    // Stop motor if the output is small enough
+    // or if user pressed '0'
+    if((abs(status.servoOutput_u16)<40) || forceMotorStopped)
+    {
+      motor.stop();
+    }
+    else
+    {
+      // Inverse output
+      motor.speed(-status.servoOutput_u16);
+    }
+
+    if((millis()-millisOld)> 100)
+    {
+      digitalWrite(LED_BUILTIN, HIGH);
+      millisOld = millis();
+    }
+    else
+    {
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+  }
 }
 
 // the loop routine runs over and over again forever:
@@ -140,132 +237,40 @@ void loop() {
   uint32_t wMillisDiffTemp;
   uint32_t wMicrosNowTemp;
   uint32_t wMillisNowTemp;
-  uint32_t wCounterTemp;
-  static uint32_t wCounterTempOld;
   static uint32_t millisOld;
   static float u_pid_n_eng=50;
   static bool forceMotorStopped;
-  float nEngFromPotTemp;
-
-  // Inputs
-  status.servoPosRaw_u16 = analogRead(MOTOR_POS);
-  status.potInCabRaw_u16 = analogRead(REF_IN);
-  getNEngSample();
- // status.nEng_f = 400.0; // Remove this! Only for test
-
-  status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
-  status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
-
-  // Create filtered values
-  status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
-  status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
-  status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
 
 
-  // Engine speed PID calculation
-  if(status.nEngRefExtEnable)
-  {
-	  // Use external engine speed reference
-	  status.nEngRef_u16 = (float)status.nEngRefExt_u16;
-  }
-  else
-  {
-	  // Use internal engine speed reference
+  handleInputs();
 
-	  // Limit the pot reference value
-	  nEngFromPotTemp = status.potInCabFilt_f;
-	  if(nEngFromPotTemp<conversions.nEngRefMin)
-	  {
-		  nEngFromPotTemp = conversions.nEngRefMin;
-	  }
-	  else if(nEngFromPotTemp>conversions.nEngRefMax)
-	  {
-		  nEngFromPotTemp = conversions.nEngRefMax;
-	  }
-
-	  status.nEngRef_u16 = nEngFromPotTemp;
-  }
-  if(pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f))
-  {
-	  u_pid_n_eng = pid_n_eng.getOutput();
-  }
-
-
-  // Servo PID calculation
-
-  if(status.servoPosRefExtEnable)
-  {
-	  // Use external servo position reference
-	  status.servoPosRef_f = status.servoPosRefExt_f;
-  }
-  else
-  {
-	  // Use internal servo position reference
-	  status.servoPosRef_f = u_pid_n_eng;
-  }
-  if(pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
-  {
-    status.servoOutput_u16=(int)pid_servo.getOutput();
-    // Stop motor if the output is small enough
-    // or if user pressed '0'
-    if((abs(status.servoOutput_u16)<40) || forceMotorStopped)
-    {
-      motor.stop();
-    }
-    else
-    {
-    	// Inverse output
-      motor.speed(-status.servoOutput_u16);
-    }
-
-    if((millis()-millisOld)> 100)
-    {
-
-        wCounterTempOld=wCounterTemp;
-
-        /*
-         * Pulses:
-         * rpm	pulses per second
-         * 500	132
-         * 1000	720
-         * 1500	1133
-         * 1700 1287
-         *
-         */
-    	digitalWrite(LED_BUILTIN, HIGH);
-    	millisOld = millis();
-    }
-    else
-    {
-    	digitalWrite(LED_BUILTIN, LOW);
-    }
-
-  }
+  calculate();
+  
   handleSerialComm();
 
 }
 
-/** @brief Interrupt callback at every pulse from the alternator 
+/** @brief Interrupt callback at every pulse from the alternator
 
 Approximately 2 pulses every 10 ms.
 */
 void wInterrupt()
 {
-	static uint32_t microsOld;
-	static uint32_t millisOld;
-	static uint8_t listPos;
+  static uint32_t microsOld;
+  static uint32_t millisOld;
+  static uint8_t listPos;
 
-	wMicrosNow = micros();  // Timestamp now
-	wMillisNow = millis();
-	wMicrosDiff = wMicrosNow-microsOld;
-	wMillisDiff = wMillisNow-millisOld;
-	wMicrosDiffListPtr[listPos] = wMicrosDiff;
-	if(++listPos>9)
-		listPos=0;
-	wCounter++;
+  wMicrosNow = micros();  // Timestamp now
+  wMillisNow = millis();
+  wMicrosDiff = wMicrosNow-microsOld;
+  wMillisDiff = wMillisNow-millisOld;
+  wMicrosDiffListPtr[listPos] = wMicrosDiff;
+  if(++listPos>9)
+  listPos=0;
+  wCounter++;
 
-	microsOld = wMicrosNow;
-	millisOld = wMillisNow;
+  microsOld = wMicrosNow;
+  millisOld = wMillisNow;
 }
 
 
