@@ -6,6 +6,7 @@
 #include "motor.hpp"
 #include "pid.hpp"
 #include "comm.hpp"
+#include "system.hpp"
 #include <avr/wdt.h>
 //Beginning of Auto generated function prototypes by Atmel Studio
 void wInterrupt();
@@ -45,6 +46,9 @@ PID pid_n_eng;
 
 status_t		status;
 conversions_t	conversions;
+TaskTimer taskTimerMain;
+TaskTimer taskTimerController;
+TaskTimer taskTimerSerial;
 
 /** @brief Get one sample of the engine speed */
 void getNEngSample()
@@ -123,6 +127,11 @@ void setup() {
   conversions.aFiltNEng_f	= 0.1;
   conversions.nEngRefMin	= N_ENG_MIN;
   conversions.nEngRefMax	= N_ENG_MAX;
+
+  // Setup task timers
+  taskTimerMain.init();
+  taskTimerController.init();
+  taskTimerSerial.init();
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -237,25 +246,30 @@ void calculate()
 void loop() {
   static uint32_t millisOld;
   uint32_t millisNow;
-  uint32_t microsNow;
   static uint32_t tSampleMain=10; //!< The main sample time to use
   
   millisNow = millis();
-  microsNow = micros();
   
+  taskTimerMain.start();
   if((millisNow-millisOld)>tSampleMain)
   {
+    taskTimerController.start();
+
     handleInputs();
 
     calculate();
     
     handleOutputs();
     
-    // @todo Calculate task time
+    taskTimerController.stop();
+      
   }
   
+  taskTimerSerial.start();
   handleSerialComm();
-    // @todo Calculate task time
+  taskTimerSerial.stop();
+  
+  taskTimerMain.stop();
 }
 
 /** @brief Interrupt callback at every pulse from the alternator
