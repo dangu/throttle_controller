@@ -1,5 +1,6 @@
 #include "motor.hpp"
 #include "Arduino.h"
+#include "system.hpp"
 
 // The do_reboot is courtesy of this forum post:
 // https://github.com/Optiboot/optiboot/issues/180
