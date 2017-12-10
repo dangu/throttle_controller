@@ -235,13 +235,27 @@ void calculate()
 
 // the loop routine runs over and over again forever:
 void loop() {
-  handleInputs();
-
-  calculate();
+  static uint32_t millisOld;
+  uint32_t millisNow;
+  uint32_t microsNow;
+  static uint32_t tSampleMain=10; //!< The main sample time to use
   
-  handleOutputs();
+  millisNow = millis();
+  microsNow = micros();
+  
+  if((millisNow-millisOld)>tSampleMain)
+  {
+    handleInputs();
+
+    calculate();
+    
+    handleOutputs();
+    
+    // @todo Calculate task time
+  }
   
   handleSerialComm();
+    // @todo Calculate task time
 }
 
 /** @brief Interrupt callback at every pulse from the alternator
