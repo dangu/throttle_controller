@@ -187,7 +187,6 @@ uint32_t handleOutputs()
 /** @brief Calculation */
 void calculate()
 {
-  bool forceMotorStopped;
   float nEngFromPotTemp;
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
@@ -215,7 +214,7 @@ void calculate()
     status.nEngRef_u16 = nEngFromPotTemp;
   }
   
-  pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f)
+  pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f);
 
   u_pid_n_eng = pid_n_eng.getOutput();
   
@@ -231,7 +230,7 @@ void calculate()
     status.servoPosRef_f = u_pid_n_eng;
   }
   
-  pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
+  pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f);
 }
 
 // the loop routine runs over and over again forever:
