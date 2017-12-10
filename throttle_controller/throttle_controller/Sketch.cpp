@@ -199,6 +199,9 @@ void calculate()
   float nEngFromPotTemp;
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
+  // Handle modes
+
+
   // Engine speed PID calculation
   if(status.nEngRefExtEnable)
   {
