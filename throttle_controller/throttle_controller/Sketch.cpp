@@ -156,11 +156,38 @@ void handleInputs()
 
 }
 
+uint32_t handleOutputs()
+{
+  static uint32_t millisOld;
+  
+  status.servoOutput_u16=(int)pid_servo.getOutput();
+  
+  // Stop motor if the output is small enough
+  if(abs(status.servoOutput_u16)<40)
+  {
+    motor.stop();
+  }
+  else
+  {
+    // Inverse output
+    motor.speed(-status.servoOutput_u16);
+  }
+
+  if((millis()-millisOld)> 100)
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+    millisOld = millis();
+  }
+  else
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+  }    return millisOld;
+}
+
 /** @brief Calculation */
 void calculate()
 {
   bool forceMotorStopped;
-  static uint32_t millisOld;
   float nEngFromPotTemp;
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
@@ -188,13 +215,11 @@ void calculate()
     status.nEngRef_u16 = nEngFromPotTemp;
   }
   
-  if(pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f))
-  {
-    u_pid_n_eng = pid_n_eng.getOutput();
-  }
+  pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f)
+
+  u_pid_n_eng = pid_n_eng.getOutput();
   
   // Servo PID calculation
-
   if(status.servoPosRefExtEnable)
   {
     // Use external servo position reference
@@ -205,31 +230,8 @@ void calculate()
     // Use internal servo position reference
     status.servoPosRef_f = u_pid_n_eng;
   }
-  if(pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
-  {
-    status.servoOutput_u16=(int)pid_servo.getOutput();
-    // Stop motor if the output is small enough
-    // or if user pressed '0'
-    if((abs(status.servoOutput_u16)<40) || forceMotorStopped)
-    {
-      motor.stop();
-    }
-    else
-    {
-      // Inverse output
-      motor.speed(-status.servoOutput_u16);
-    }
-
-    if((millis()-millisOld)> 100)
-    {
-      digitalWrite(LED_BUILTIN, HIGH);
-      millisOld = millis();
-    }
-    else
-    {
-      digitalWrite(LED_BUILTIN, LOW);
-    }
-  }
+  
+  pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f))
 }
 
 // the loop routine runs over and over again forever:
@@ -237,6 +239,8 @@ void loop() {
   handleInputs();
 
   calculate();
+  
+  handleOutputs();
   
   handleSerialComm();
 }
