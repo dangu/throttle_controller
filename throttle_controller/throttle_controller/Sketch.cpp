@@ -25,6 +25,9 @@ void wInterrupt();
 #define REF_IN    0
 #define W_INTERRUPT 0
 
+#define N_ENG_MIN 400
+#define N_ENG_MAX 2400
+
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
 volatile uint32_t wCounter;
@@ -118,8 +121,8 @@ void setup() {
   conversions.aFiltServo_f 	= 0.5;
   conversions.aFiltPot_f 	= 0.1;
   conversions.aFiltNEng_f	= 0.1;
-  conversions.nEngRefMin	= 400;
-  conversions.nEngRefMax	= 2400;
+  conversions.nEngRefMin	= N_ENG_MIN;
+  conversions.nEngRefMax	= N_ENG_MAX;
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -131,8 +134,7 @@ Handle all inputs
 */
 void handleInputs()
 {
-  float nEngFromPotTemp;
-  float u_pid_n_eng;
+
   
   // Inputs
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
@@ -149,6 +151,18 @@ void handleInputs()
   status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
   status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
 
+
+
+
+}
+
+/** @brief Calculation */
+void calculate()
+{
+  bool forceMotorStopped;
+  static uint32_t millisOld;
+  float nEngFromPotTemp;
+  static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
   // Engine speed PID calculation
   if(status.nEngRefExtEnable)
@@ -173,18 +187,12 @@ void handleInputs()
 
     status.nEngRef_u16 = nEngFromPotTemp;
   }
+  
   if(pid_n_eng.calculate((double)status.nEngRef_u16, (double)status.nEngFilt_f))
   {
     u_pid_n_eng = pid_n_eng.getOutput();
   }
-}
-
-void calculate()
-{
-  float u_pid_n_eng;
-  bool forceMotorStopped;
-  static uint32_t millisOld;
-
+  
   // Servo PID calculation
 
   if(status.servoPosRefExtEnable)
@@ -226,29 +234,11 @@ void calculate()
 
 // the loop routine runs over and over again forever:
 void loop() {
-  static int ref = 500;
-  static int refSerial = 800; //!< rpm value from serial input
-  int refIn;  //!< Analog reference value input
-  int t;
-  static unsigned int ct;
-  static int tOld;
-  static int refList[] = {100,200,300,200,100,800,100,800,700,690,680,670,660,650,645,640,635};
-  int stepTime=500;
-  uint32_t wMicrosDiffTemp;
-  uint32_t wMillisDiffTemp;
-  uint32_t wMicrosNowTemp;
-  uint32_t wMillisNowTemp;
-  static uint32_t millisOld;
-  static float u_pid_n_eng=50;
-  static bool forceMotorStopped;
-
-
   handleInputs();
 
   calculate();
   
   handleSerialComm();
-
 }
 
 /** @brief Interrupt callback at every pulse from the alternator
