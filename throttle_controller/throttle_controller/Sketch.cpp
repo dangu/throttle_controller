@@ -129,9 +129,10 @@ void setup() {
 /**@brief
 Handle all inputs
 */
-void handleInputs(, float &u_pid_n_eng)
+void handleInputs()
 {
   float nEngFromPotTemp;
+  float u_pid_n_eng;
   
   // Inputs
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
@@ -181,7 +182,7 @@ void handleInputs(, float &u_pid_n_eng)
 void calculate()
 {
   float u_pid_n_eng;
-  bool forceMotorStopped
+  bool forceMotorStopped;
   static uint32_t millisOld;
 
   // Servo PID calculation
