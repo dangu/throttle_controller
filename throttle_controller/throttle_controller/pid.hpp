@@ -9,6 +9,18 @@ public:
   bool calculate(double ref, double in);
   double getOutput();
   void debugPrint(double, double);
+  void setPGain(double);
+  void setIGain(double);
+  void setDGain(double);
+  void setUMax(double);
+  void setUMin(double);
+
+  double getPGain();
+  double getIGain();
+  double getDGain();
+  double getUMax();
+  double getUMin();
+
 
 private:
   double _u;

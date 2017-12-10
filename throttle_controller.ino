@@ -1,5 +1,3 @@
- //*End of auto generated code by Atmel studio */
-
 #include "motor.hpp"
 #include "pid.hpp"
 #include "comm.hpp"
