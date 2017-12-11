@@ -16,14 +16,22 @@ class TaskTimer {
 };
 
 /** @brief Main modes */
-enum mode_e {
+enum mode_t {
   OFF = 0,
   START,
   NORMAL
 };
 
+/** @brief Status of the engine speed signal */
+enum nEngStat_t {
+  INIT = 0,
+  OK,
+  TOO_OLD,
+  ERROR
+};
+
 typedef struct {
-  mode_e    mode;                   //!< Main mode
+  mode_t    mode_e;                   //!< Main mode
   uint8_t		nEngRefExtEnable:1;     //!< Enable external engine speed reference
   uint8_t		servoPosRefExtEnable:1; //!< Enable external servo position
   uint8_t		padding:6;              //!< Padding to 8 bit boundary
@@ -32,6 +40,7 @@ typedef struct {
   uint16_t	nEngRefExt_u16;         //!< External engine speed reference
   float		nEng_f;                   //!< Measured engine speed
   float		nEngFilt_f;               //!< Filtered engine speed
+  nEngStat_t   nEngStatus_e;             //!< Status of the engine speed signal
   float		servoPosRefExt_f;         //!< External servo position
   float		servoPosRef_f;            //!< Internal servo position
   uint16_t	servoPosRaw_u16;        //!< Measured servo position (A/D-converter value)

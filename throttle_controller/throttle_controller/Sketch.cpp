@@ -26,20 +26,17 @@ void wInterrupt();
 #define REF_IN    0
 #define W_INTERRUPT 0
 
-#define N_ENG_MIN 400
-#define N_ENG_MAX 2400
+#define N_ENG_MIN             400  //!< [rpm] Min allowed engine speed
+#define N_ENG_MAX             2400 //!< [rpm] Max allowed engine speed
+#define N_ENG_MAX_SAMPLED     3000 //!< [rpm] Max realistically sampled engine speed
+#define N_ENG_MAX_SAMPLE_AGE  1000 //!< [ms] max age of engine speed measurement
 
 Motor motor(MOTOR_PWM, MOTOR_A1, MOTOR_A2);
 
-volatile uint32_t wCounter;
-volatile uint32_t wMicrosDiff;
-volatile uint32_t wMillisDiff;
-volatile uint32_t wMicrosNow;
-volatile uint32_t wMillisNow;
-volatile uint16_t wMicrosDiffList[10];
-volatile uint16_t wMicrosDiffList2[10];
-volatile uint16_t *wMicrosDiffListPtr=wMicrosDiffList;
-volatile uint16_t *wMicrosDiffListPtrToPrint;
+volatile uint32_t wMicrosDiff_u32;
+volatile uint32_t wMillisDiff_u32;
+volatile uint32_t wMicrosNow_u32;
+volatile uint32_t wMillisNow_u32;
 
 PID pid_servo;
 PID pid_n_eng;
@@ -50,29 +47,63 @@ TaskTimer taskTimerMain;
 TaskTimer taskTimerController;
 TaskTimer taskTimerSerial;
 
-/** @brief Get one sample of the engine speed */
+/** @brief Get one sample of the engine speed 
+
+This function tries to do some basic checks of the engine speed
+and flag it appropriately.
+*/
 void getNEngSample()
 {
+  uint32_t wMicrosDiffTmp_u32;
+  uint32_t wMillisNowTmp_u32;
+  uint32_t wSampleAge_u32;    //!< [ms] The age of the engine speed measurement
+  float nEngTmp_f;
+  
   // Critical region:
   // The interrupts need to be turned off before reading the
   // variables used inside the interrupt routine
   noInterrupts();
-  /*    wMicrosDiffTemp = wMicrosDiff;
-  wMillisDiffTemp = wMillisDiff;
-  wMillisNowTemp = wMillisNow;
-  wMicrosNowTemp = wMicrosNow;
-  wCounterTemp = wCounter;*/
-
-  if(wMicrosDiff == 0)
+  wMillisNowTmp_u32 = wMillisNow_u32;
+  wMicrosDiffTmp_u32 = wMicrosDiff_u32;
+  interrupts();
+  
+  wSampleAge_u32 = millis() - wMillisNowTmp_u32; // Get the age of the engine speed sample
+  
+  if(wSampleAge_u32 < N_ENG_MAX_SAMPLE_AGE)
   {
-    status.nEng_f=0;
+    // If the engine speed measurement is new enough
+    if(wMicrosDiffTmp_u32 == 0)
+    {
+      // Assume this is the initial state, before any interrupts.
+      // Should never be here actually...
+      status.nEngStatus_e = INIT;
+    }
+    else
+    {
+      // Calculate the engine speed from the pulse measurement
+      // of the alternator. A factor of 4 was found empirically.
+      nEngTmp_f=4*1000000/wMicrosDiffTmp_u32;
+      if(nEngTmp_f<N_ENG_MAX_SAMPLED)
+      {
+        // If the measured engine speed is realistic
+        status.nEng_f = nEngTmp_f;
+        status.nEngStatus_e = OK;
+      }
+      else
+      {
+        // Unrealistic engine speed. Keep the old value and flag as error.
+        status.nEngStatus_e = ERROR;
+      }
+    }
   }
   else
   {
-    status.nEng_f=4*1000000/wMicrosDiff;
+    // Waited too long for a pulse which would happen if the engine is stopped.
+    // The problem is it could also happen if there is no signal from the alternator.
+    // Other logic needs to take care of this.
+    status.nEng_f = 0;
+    status.nEngStatus_e = TOO_OLD;
   }
-
-  interrupts();
 }
 
 // the setup routine runs once when you press reset:
@@ -123,7 +154,8 @@ void setup() {
   taskTimerSerial.init();
   
   // Init status
-  status.mode = NORMAL;     // Assume wakeup from reset in normal mode
+  status.mode_e = NORMAL;     // Assume wakeup from reset in normal mode
+  status.nEngStatus_e = INIT; // Initial engine speed state
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -135,13 +167,10 @@ Handle all inputs
 */
 void handleInputs()
 {
-
-  
   // Inputs
   status.servoPosRaw_u16 = analogRead(MOTOR_POS);
   status.potInCabRaw_u16 = analogRead(REF_IN);
   getNEngSample();
-  // status.nEng_f = 400.0; // Remove this! Only for test
 
   // y=kx+m conversion of the inputs
   status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
@@ -151,10 +180,6 @@ void handleInputs()
   status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
   status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
   status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
-
-
-
-
 }
 
 uint32_t handleOutputs()
@@ -192,18 +217,18 @@ void calculate()
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
   // Handle modes
-  switch(status.mode)
+  switch(status.mode_e)
   {
-      case OFF:
-      break;
-      case START:
-      break;
-      case NORMAL:
-      // If engine speed is ok, continue in normal mode
-      break;
-      default:
-      // Should never be here!
-      break;
+    case OFF:
+    break;
+    case START:
+    break;
+    case NORMAL:
+    // If engine speed is ok, continue in normal mode
+    break;
+    default:
+    // Should never be here!
+    break;
   }
 
   // Engine speed PID calculation
@@ -285,21 +310,16 @@ Approximately 2 pulses every 10 ms.
 */
 void wInterrupt()
 {
-  static uint32_t microsOld;
-  static uint32_t millisOld;
-  static uint8_t listPos;
+  static uint32_t microsOld_u32;
+  static uint32_t millisOld_u32;
 
-  wMicrosNow = micros();  // Timestamp now
-  wMillisNow = millis();
-  wMicrosDiff = wMicrosNow-microsOld;
-  wMillisDiff = wMillisNow-millisOld;
-  wMicrosDiffListPtr[listPos] = wMicrosDiff;
-  if(++listPos>9)
-  listPos=0;
-  wCounter++;
+  wMicrosNow_u32 = micros();  // Timestamp now
+  wMillisNow_u32 = millis();
+  wMicrosDiff_u32 = wMicrosNow_u32-microsOld_u32;
+  wMillisDiff_u32 = wMillisNow_u32-millisOld_u32;
 
-  microsOld = wMicrosNow;
-  millisOld = wMillisNow;
+  microsOld_u32 = wMicrosNow_u32;
+  millisOld_u32 = wMillisNow_u32;
 }
 
 
