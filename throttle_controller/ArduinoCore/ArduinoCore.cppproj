@@ -214,9 +214,6 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="include\comm.hpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="include\core\Arduino.h">
       <SubType>compile</SubType>
     </Compile>
@@ -272,15 +269,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\core\WString.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="include\motor.hpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="include\pid.hpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="include\system.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\variants\eightanaloginputs\pins_arduino.h">
@@ -369,10 +357,6 @@
     <Folder Include="include\" />
     <Folder Include="include\core\" />
     <Folder Include="include\hex\" />
-    <Folder Include="include\throttle_controller\" />
-    <Folder Include="include\throttle_controller\ArduinoCore\" />
-    <Folder Include="include\throttle_controller\ArduinoCore\include\" />
-    <Folder Include="include\throttle_controller\ArduinoCore\include\hex\" />
     <Folder Include="include\variants\" />
     <Folder Include="include\variants\eightanaloginputs\" />
     <Folder Include="include\variants\standard\" />
@@ -382,9 +366,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="include\hex\170829.hex">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="include\throttle_controller\ArduinoCore\include\hex\170829.hex">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>

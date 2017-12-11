@@ -72,17 +72,6 @@ void getNEngSample()
     status.nEng_f=4*1000000/wMicrosDiff;
   }
 
-  // Double buffered list
-  if(wMicrosDiffListPtr == wMicrosDiffList)
-  {
-    wMicrosDiffListPtr = wMicrosDiffList2;
-    wMicrosDiffListPtrToPrint = wMicrosDiffList;
-  }
-  else
-  {
-    wMicrosDiffListPtr = wMicrosDiffList;
-    wMicrosDiffListPtrToPrint = wMicrosDiffList2;
-  }
   interrupts();
 }
 
@@ -132,6 +121,9 @@ void setup() {
   taskTimerMain.init();
   taskTimerController.init();
   taskTimerSerial.init();
+  
+  // Init status
+  status.mode = NORMAL;     // Assume wakeup from reset in normal mode
 
   attachInterrupt(W_INTERRUPT,wInterrupt, RISING);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -200,7 +192,19 @@ void calculate()
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
 
   // Handle modes
-
+  switch(status.mode)
+  {
+      case OFF:
+      break;
+      case START:
+      break;
+      case NORMAL:
+      // If engine speed is ok, continue in normal mode
+      break;
+      default:
+      // Should never be here!
+      break;
+  }
 
   // Engine speed PID calculation
   if(status.nEngRefExtEnable)
@@ -249,12 +253,12 @@ void calculate()
 void loop() {
   static uint32_t millisOld;
   uint32_t millisNow;
-  static uint32_t tSampleMain=10; //!< The main sample time to use
+  static uint32_t tSampleMain=10; //!< [ms] The main sample time to use
   
   millisNow = millis();
   
   taskTimerMain.start();
-  if((millisNow-millisOld)>tSampleMain)
+  if((millisNow-millisOld)>=tSampleMain)
   {
     taskTimerController.start();
 
@@ -264,8 +268,8 @@ void loop() {
     
     handleOutputs();
     
+    millisOld = millisNow;
     taskTimerController.stop();
-      
   }
   
   taskTimerSerial.start();

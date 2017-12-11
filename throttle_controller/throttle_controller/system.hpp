@@ -15,24 +15,32 @@ class TaskTimer {
   void stop();
 };
 
-typedef struct {
-  uint8_t		nEngRefExtEnable:1;		//!< Enable external engine speed reference
-  uint8_t		servoPosRefExtEnable:1;	//!< Enable external servo position
-  uint8_t		padding:6;				//!< Padding to 8 bit boundary
+/** @brief Main modes */
+enum mode_e {
+  OFF = 0,
+  START,
+  NORMAL
+};
 
-  uint16_t	nEngRef_u16;			//!< Engine speed reference
-  uint16_t	nEngRefExt_u16;			//!< External engine speed reference
-  float		nEng_f;					//!< Measured engine speed
-  float		nEngFilt_f;				//!< Filtered engine speed
-  float		servoPosRefExt_f;		//!< External servo position
-  float		servoPosRef_f;			//!< Internal servo position
-  uint16_t	servoPosRaw_u16;		//!< Measured servo position (A/D-converter value)
-  float		servoPos_f;				//!< Converted servo position (0.0-100.0)
-  float		servoPosFilt_f;			//!< Filtered servo position
-  int16_t		servoOutput_u16;		//!< Output signal to servo
-  uint16_t	potInCabRaw_u16;		//!< Measured cab potentiometer value (A/D-converter value)
-  float		potInCab_f;				//!< Converted cab potentiometer value (0.0-100.0
-  float		potInCabFilt_f;			//!< Filtered cab potentiometer value
+typedef struct {
+  mode_e    mode;                   //!< Main mode
+  uint8_t		nEngRefExtEnable:1;     //!< Enable external engine speed reference
+  uint8_t		servoPosRefExtEnable:1; //!< Enable external servo position
+  uint8_t		padding:6;              //!< Padding to 8 bit boundary
+
+  uint16_t	nEngRef_u16;            //!< Engine speed reference
+  uint16_t	nEngRefExt_u16;         //!< External engine speed reference
+  float		nEng_f;                   //!< Measured engine speed
+  float		nEngFilt_f;               //!< Filtered engine speed
+  float		servoPosRefExt_f;         //!< External servo position
+  float		servoPosRef_f;            //!< Internal servo position
+  uint16_t	servoPosRaw_u16;        //!< Measured servo position (A/D-converter value)
+  float		servoPos_f;               //!< Converted servo position (0.0-100.0)
+  float		servoPosFilt_f;           //!< Filtered servo position
+  int16_t		servoOutput_u16;        //!< Output signal to servo
+  uint16_t	potInCabRaw_u16;        //!< Measured cab potentiometer value (A/D-converter value)
+  float		potInCab_f;               //!< Converted cab potentiometer value (0.0-100.0
+  float		potInCabFilt_f;           //!< Filtered cab potentiometer value
 }status_t;
 
 typedef struct {
