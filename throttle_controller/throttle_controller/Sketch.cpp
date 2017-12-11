@@ -42,12 +42,12 @@ PID pid_servo;
 PID pid_n_eng;
 
 status_t		status;
-conversions_t	conversions;
+parameters_t	parameters;
 TaskTimer taskTimerMain;
 TaskTimer taskTimerController;
 TaskTimer taskTimerSerial;
 
-/** @brief Get one sample of the engine speed 
+/** @brief Get one sample of the engine speed
 
 This function tries to do some basic checks of the engine speed
 and flag it appropriately.
@@ -138,15 +138,15 @@ void setup() {
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
-  conversions.servoK 		= -0.1667;
-  conversions.servoM 		= 150;
-  conversions.potK 			= 3;
-  conversions.potM 			= -800;
-  conversions.aFiltServo_f 	= 0.5;
-  conversions.aFiltPot_f 	= 0.1;
-  conversions.aFiltNEng_f	= 0.1;
-  conversions.nEngRefMin	= N_ENG_MIN;
-  conversions.nEngRefMax	= N_ENG_MAX;
+  parameters.servoK 		= -0.1667;
+  parameters.servoM 		= 150;
+  parameters.potK 			= 3;
+  parameters.potM 			= -800;
+  parameters.aFiltServo_f 	= 0.5;
+  parameters.aFiltPot_f 	= 0.1;
+  parameters.aFiltNEng_f	= 0.1;
+  parameters.nEngRefMin	= N_ENG_MIN;
+  parameters.nEngRefMax	= N_ENG_MAX;
 
   // Setup task timers
   taskTimerMain.init();
@@ -173,13 +173,13 @@ void handleInputs()
   getNEngSample();
 
   // y=kx+m conversion of the inputs
-  status.servoPos_f = conversions.servoK*(float)status.servoPosRaw_u16 + conversions.servoM;
-  status.potInCab_f = conversions.potK*(float)status.potInCabRaw_u16 + conversions.potM;
+  status.servoPos_f = parameters.servoK*(float)status.servoPosRaw_u16 + parameters.servoM;
+  status.potInCab_f = parameters.potK*(float)status.potInCabRaw_u16 + parameters.potM;
 
   // Create filtered values
-  status.servoPosFilt_f = status.servoPosFilt_f*(1.0-conversions.aFiltServo_f) + status.servoPos_f*conversions.aFiltServo_f;
-  status.potInCabFilt_f = status.potInCabFilt_f*(1.0-conversions.aFiltPot_f) + status.potInCab_f*conversions.aFiltPot_f;
-  status.nEngFilt_f		= status.nEngFilt_f*(1.0-conversions.aFiltNEng_f) + status.nEng_f*conversions.aFiltNEng_f;
+  status.servoPosFilt_f = status.servoPosFilt_f*(1.0-parameters.aFiltServo_f) + status.servoPos_f*parameters.aFiltServo_f;
+  status.potInCabFilt_f = status.potInCabFilt_f*(1.0-parameters.aFiltPot_f) + status.potInCab_f*parameters.aFiltPot_f;
+  status.nEngFilt_f		= status.nEngFilt_f*(1.0-parameters.aFiltNEng_f) + status.nEng_f*parameters.aFiltNEng_f;
 }
 
 uint32_t handleOutputs()
@@ -215,20 +215,53 @@ void calculate()
 {
   float nEngFromPotTemp;
   static float u_pid_n_eng = N_ENG_MIN;  // Init with minimal engine speed
+  mode_t modeNext_e=status.mode_e;                    // The next mode
 
   // Handle modes
   switch(status.mode_e)
   {
     case OFF:
+    // In this mode, it is assumed that the engine is off
+    // The servo should be put in starting position to wait for
+    // the engine speed to rise above a minimum value
+    if(status.nEngStatus_e == OK &&
+    status.nEngFilt_f > N_ENG_MIN)
+    {
+      // If the filtered engine speed is higher than a minimum value,
+      // move to START mode
+      modeNext_e = START;
+    }
+    else
+    {
+      modeNext_e = OFF;
+    }
     break;
     case START:
+    // In this mode, wait for "kickdown", that is that the throttle is pushed
+    // to 100%
+    //if(status.potInCabFilt_f>)
     break;
     case NORMAL:
-    // If engine speed is ok, continue in normal mode
+    // No engine speed is measured. Go to mode OFF
+    if(status.nEngStatus_e == TOO_OLD)
+    {
+      status.mode_e = OFF;
+    }
+    else
+    {
+      // If there is still a valid engine speed sample, stay in mode NORMAL
+      modeNext_e = NORMAL;
+    }
     break;
     default:
     // Should never be here!
     break;
+  }
+  
+  if(modeNext_e != status.mode_e)
+  {
+    // Mode change!
+    status.mode_e = modeNext_e;
   }
 
   // Engine speed PID calculation
@@ -243,13 +276,13 @@ void calculate()
 
     // Limit the pot reference value
     nEngFromPotTemp = status.potInCabFilt_f;
-    if(nEngFromPotTemp<conversions.nEngRefMin)
+    if(nEngFromPotTemp<parameters.nEngRefMin)
     {
-      nEngFromPotTemp = conversions.nEngRefMin;
+      nEngFromPotTemp = parameters.nEngRefMin;
     }
-    else if(nEngFromPotTemp>conversions.nEngRefMax)
+    else if(nEngFromPotTemp>parameters.nEngRefMax)
     {
-      nEngFromPotTemp = conversions.nEngRefMax;
+      nEngFromPotTemp = parameters.nEngRefMax;
     }
 
     status.nEngRef_u16 = nEngFromPotTemp;

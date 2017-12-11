@@ -40,13 +40,13 @@ typedef struct {
   uint16_t	nEngRefExt_u16;         //!< External engine speed reference
   float		nEng_f;                   //!< Measured engine speed
   float		nEngFilt_f;               //!< Filtered engine speed
-  nEngStat_t   nEngStatus_e;             //!< Status of the engine speed signal
+  nEngStat_t  nEngStatus_e;             //!< Status of the engine speed signal
   float		servoPosRefExt_f;         //!< External servo position
   float		servoPosRef_f;            //!< Internal servo position
   uint16_t	servoPosRaw_u16;        //!< Measured servo position (A/D-converter value)
   float		servoPos_f;               //!< Converted servo position (0.0-100.0)
   float		servoPosFilt_f;           //!< Filtered servo position
-  int16_t		servoOutput_u16;        //!< Output signal to servo
+  int16_t	servoOutput_u16;        //!< Output signal to servo
   uint16_t	potInCabRaw_u16;        //!< Measured cab potentiometer value (A/D-converter value)
   float		potInCab_f;               //!< Converted cab potentiometer value (0.0-100.0
   float		potInCabFilt_f;           //!< Filtered cab potentiometer value
@@ -62,6 +62,6 @@ typedef struct {
   float		aFiltNEng_f;			//!< Filter constant engine speed
   uint16_t	nEngRefMin;				//!< Min allowed engine speed reference
   uint16_t	nEngRefMax;				//!< Max allowed engine speed reference
-}conversions_t;
+}parameters_t;
 
 #endif
