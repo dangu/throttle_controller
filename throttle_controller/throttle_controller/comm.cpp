@@ -80,13 +80,13 @@ void displayConversionParams()
 {
 	Serial.print(RESP_DISP_CONVERSION_PARAMS);
 	Serial.print(" ");
-	Serial.print(parameters.servoK,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.servoADMax);
 	Serial.print(" ");
-	Serial.print(parameters.servoM,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.servoADMin);
 	Serial.print(" ");
-	Serial.print(parameters.potK,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.potADMax);
 	Serial.print(" ");
-	Serial.print(parameters.potM,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.potADMin);
 	Serial.print(" ");
 	Serial.print(parameters.aFiltServo_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
@@ -259,10 +259,10 @@ void handleCommand(uint8_t rxBuf[])
 		// Set conversion parameters
 		if(nData == 7)
 		{
-			parameters.servoK 			= data[0];
-			parameters.servoM 			= data[1];
-			parameters.potK 			= data[2];
-			parameters.potM 			= data[3];
+			parameters.servoADMax 		= data[0];
+			parameters.servoADMin 		= data[1];
+			parameters.potADMax 		= data[2];
+			parameters.potADMin 		= data[3];
 			parameters.aFiltServo_f 	= data[4];
 			parameters.aFiltPot_f 		= data[5];
 			parameters.aFiltNEng_f		= data[6];

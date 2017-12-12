@@ -54,17 +54,18 @@ typedef struct {
 }status_t;
 
 typedef struct {
-  float		servoK;					//!< y=kx+m parameter for servo
-  float		servoM;					//!< y=kx+m parameter for servo
-  float		potK;					//!< y=kx+m parameter for pot
-  float		potM;					//!< y=kx+m parameter for pot
-  float		aFiltServo_f;			//!< Filter constant servo
-  float		aFiltPot_f;				//!< Filter constant pot
-  float		aFiltNEng_f;			//!< Filter constant engine speed
-  uint16_t	nEngRefMin;				//!< Min allowed engine speed reference
-  uint16_t	nEngRefMax;				//!< Max allowed engine speed reference
+  float		servoADMax;             //!< Max A/D value for servo
+  float		servoADMin;             //!< Min A/D value for servo
+  float		potADMax;               //!< Max A/D value for pot
+  float		potADMin;	            //!< Min A/D value for pot
+  float		aFiltServo_f;           //!< Filter constant servo
+  float		aFiltPot_f;             //!< Filter constant pot
+  float		aFiltNEng_f;            //!< Filter constant engine speed
+  uint16_t	nEngRefMin;             //!< Min allowed engine speed reference
+  uint16_t	nEngRefMax;             //!< Max allowed engine speed reference
   uint16_t  potKickdownSet_u16;     //!< Value used to set kickdown for engine start
   uint16_t  potKickdownReset_u16;   //!< Value used to reset kickdown for engine start
+  uint16_t  servoPosStart_u16;      //!< Starting position for the servo
 }parameters_t;
 
 class Converter

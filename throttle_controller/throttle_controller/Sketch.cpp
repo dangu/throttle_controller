@@ -41,7 +41,9 @@ volatile uint32_t wMillisNow_u32;
 PID pid_servo;
 PID pid_n_eng;
 
+Converter convServoPos;
 Converter convPot;
+Converter convNEngRef;
 
 status_t		status;
 parameters_t	parameters;
@@ -140,10 +142,10 @@ void setup() {
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
-  parameters.servoK 		      = -0.1667;
-  parameters.servoM 		      = 150;
-  parameters.potK 			      = 3;
-  parameters.potM 			      = -800;
+  parameters.servoADMax 		  = 400;
+  parameters.servoADMin 		  = 800;
+  parameters.potADMax 			  = 1024;
+  parameters.potADMin 			  = 800;
   parameters.aFiltServo_f 	      = 0.5;
   parameters.aFiltPot_f 	      = 0.1;
   parameters.aFiltNEng_f	      = 0.1;
@@ -151,9 +153,12 @@ void setup() {
   parameters.nEngRefMax	          = N_ENG_MAX;
   parameters.potKickdownSet_u16   = 95;
   parameters.potKickdownReset_u16 = 30;
+  parameters.servoPosStart_u16    = 35;
   
   // Setup value conversions
+  convServoPos.calcKM(400, 800, 100, 0);
   convPot.calcKM(1024, 800, 100, 0);
+  convNEngRef.calcKM(100, 0, 2000, 500);
 
   // Setup task timers
   taskTimerMain.init();
@@ -180,8 +185,8 @@ void handleInputs()
   getNEngSample();
 
   // y=kx+m conversion of the inputs
-  status.servoPos_f = parameters.servoK*(float)status.servoPosRaw_u16 + parameters.servoM;
-  status.potInCab_f = parameters.potK*(float)status.potInCabRaw_u16 + parameters.potM;
+  status.servoPos_f = convServoPos.convert((float)status.servoPosRaw_u16);
+  status.potInCab_f = convPot.convert((float)status.potInCabRaw_u16);
 
   // Create filtered values
   status.servoPosFilt_f = status.servoPosFilt_f*(1.0-parameters.aFiltServo_f) + status.servoPos_f*parameters.aFiltServo_f;
@@ -295,7 +300,7 @@ void calculate()
     // Use internal engine speed reference
 
     // Limit the pot reference value
-    nEngFromPotTemp = status.potInCabFilt_f;
+    nEngFromPotTemp = convNEngRef.convert(status.potInCabFilt_f);
     if(nEngFromPotTemp<parameters.nEngRefMin)
     {
       nEngFromPotTemp = parameters.nEngRefMin;
@@ -320,8 +325,16 @@ void calculate()
   }
   else
   {
-    // Use internal servo position reference
-    status.servoPosRef_f = u_pid_n_eng;
+    if(status.mode_e == NORMAL)
+    {
+      // Use internal servo position reference
+      status.servoPosRef_f = u_pid_n_eng;
+    }
+    else
+    {
+      // In all modes other than NORMAL, use a fixed servo position
+      status.servoPosRef_f = parameters.servoPosStart_u16;
+    }
   }
   
   pid_servo.calculate((double)status.servoPosRef_f, (double)status.servoPosFilt_f);
