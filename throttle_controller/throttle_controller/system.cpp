@@ -68,10 +68,15 @@ void TaskTimer::stop()
 }
 
 /**@brief Calculate conversion parameters */
-void Converter::calcKM()
+void Converter::calcKM(uint16_t aIn, uint16_t bIn, uint16_t cIn, uint16_t dIn)
 {
-  k = (float)(c-d)/(float)(a-b);
-  m = d - (float)b*(c-d)/(float)(a-b);
+  a=aIn;
+  b=bIn;
+  c=cIn;
+  d=dIn;
+  
+  k = (float)(c-d)/(a-b);
+  m = d - (float)b*(c-d)/(a-b);
 }  
 
 /**@brief Convert (transform) the input value x

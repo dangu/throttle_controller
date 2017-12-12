@@ -73,7 +73,7 @@ class Converter
   uint16_t c,d;                     //!< Transform to
   float k,m;                        //!< kx+m parameters
 public:
-  void calcKM();                    //!< Calculate k and m from a,b,c,d
+  void calcKM(uint16_t, uint16_t, uint16_t, uint16_t);//!< Calculate k and m from a,b,c,d
   float convert(float);             //!< Convert (transform)
 };
 #endif

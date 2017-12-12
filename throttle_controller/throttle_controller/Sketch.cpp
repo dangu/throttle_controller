@@ -41,6 +41,8 @@ volatile uint32_t wMillisNow_u32;
 PID pid_servo;
 PID pid_n_eng;
 
+Converter convPot;
+
 status_t		status;
 parameters_t	parameters;
 TaskTimer taskTimerMain;
@@ -149,6 +151,9 @@ void setup() {
   parameters.nEngRefMax	          = N_ENG_MAX;
   parameters.potKickdownSet_u16   = 95;
   parameters.potKickdownReset_u16 = 30;
+  
+  // Setup value conversions
+  convPot.calcKM(1024, 800, 100, 0);
 
   // Setup task timers
   taskTimerMain.init();
