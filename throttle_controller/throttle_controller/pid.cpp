@@ -157,3 +157,12 @@ double PID::getUMin()
 {
   return _uMin;
 }
+
+/** @brief Set the I part value
+
+This is used for resetting the state of the
+PID controller, for example in mode transitions */
+void PID::setIPart(double IPartIn)
+{
+  _I = IPartIn;
+}

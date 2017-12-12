@@ -14,6 +14,7 @@ public:
   void setDGain(double);
   void setUMax(double);
   void setUMin(double);
+  void setIPart(double);
 
   double getPGain();
   double getIGain();

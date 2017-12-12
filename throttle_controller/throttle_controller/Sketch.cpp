@@ -286,6 +286,14 @@ void calculate()
   if(modeNext_e != status.mode_e)
   {
     // Mode change!
+    if(modeNext_e == NORMAL)
+    {
+      // If transitioning into NORMAL mode,
+      // the engine speed PID controller should be reset. The I part
+      // of the controller should be set to the current servo position
+      // for minimizing the risk of a step in the signal.
+      pid_n_eng.setIPart(status.servoPosFilt_f);
+    }
     status.mode_e = modeNext_e;
   }
 
