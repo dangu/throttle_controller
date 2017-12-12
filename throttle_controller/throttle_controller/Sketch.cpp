@@ -138,15 +138,17 @@ void setup() {
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
-  parameters.servoK 		= -0.1667;
-  parameters.servoM 		= 150;
-  parameters.potK 			= 3;
-  parameters.potM 			= -800;
-  parameters.aFiltServo_f 	= 0.5;
-  parameters.aFiltPot_f 	= 0.1;
-  parameters.aFiltNEng_f	= 0.1;
-  parameters.nEngRefMin	= N_ENG_MIN;
-  parameters.nEngRefMax	= N_ENG_MAX;
+  parameters.servoK 		      = -0.1667;
+  parameters.servoM 		      = 150;
+  parameters.potK 			      = 3;
+  parameters.potM 			      = -800;
+  parameters.aFiltServo_f 	      = 0.5;
+  parameters.aFiltPot_f 	      = 0.1;
+  parameters.aFiltNEng_f	      = 0.1;
+  parameters.nEngRefMin	          = N_ENG_MIN;
+  parameters.nEngRefMax	          = N_ENG_MAX;
+  parameters.potKickdownSet_u16   = 95;
+  parameters.potKickdownReset_u16 = 30;
 
   // Setup task timers
   taskTimerMain.init();
@@ -239,8 +241,21 @@ void calculate()
     case START:
     // In this mode, wait for "kickdown", that is that the throttle is pushed
     // to 100%
-    //if(status.potInCabFilt_f>)
+    // The reason for this is that the alternator V-belt seems to be
+    // slipping right after engine start, causing the measured engine speed
+    // to be unreliable and resulting in engine hunting.
+    if(status.potInCabFilt_f>parameters.potKickdownSet_u16)
+    {
+      modeNext_e = KICKDOWN;
+    }
     break;
+    case KICKDOWN:
+    // In this state, wait for the throttle (and pot) to be released below
+    // a setpoint, to allow for smooth transition to engine speed control
+    if(status.potInCabFilt_f<parameters.potKickdownReset_u16)
+    {
+      modeNext_e = NORMAL;
+    }
     case NORMAL:
     // No engine speed is measured. Go to mode OFF
     if(status.nEngStatus_e == TOO_OLD)

@@ -66,3 +66,17 @@ void TaskTimer::stop()
     tMax = dt;
   }
 }
+
+/**@brief Calculate conversion parameters */
+void Converter::calcKM()
+{
+  k = (float)(c-d)/(float)(a-b);
+  m = d - (float)b*(c-d)/(float)(a-b);
+}  
+
+/**@brief Convert (transform) the input value x
+to y= kx+m */
+float Converter::convert(float x)
+{
+  return k*x + m;
+}  
