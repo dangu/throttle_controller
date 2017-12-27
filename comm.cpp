@@ -4,7 +4,7 @@
 #include "pid.hpp"
 
 extern status_t status;
-extern conversions_t conversions;
+extern parameters_t parameters;
 
 extern PID pid_servo;
 extern PID pid_n_eng;
@@ -80,23 +80,23 @@ void displayConversionParams()
 {
 	Serial.print(RESP_DISP_CONVERSION_PARAMS);
 	Serial.print(" ");
-	Serial.print(conversions.servoK,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.servoADMax);
 	Serial.print(" ");
-	Serial.print(conversions.servoM,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.servoADMin);
 	Serial.print(" ");
-	Serial.print(conversions.potK,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.potADMax);
 	Serial.print(" ");
-	Serial.print(conversions.potM,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.potADMin);
 	Serial.print(" ");
-	Serial.print(conversions.aFiltServo_f,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.aFiltServo_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(conversions.aFiltPot_f,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.aFiltPot_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(conversions.aFiltNEng_f,DECIMALS_IN_DISPLAY);
+	Serial.print(parameters.aFiltNEng_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
-	Serial.print(conversions.nEngRefMin);
+	Serial.print(parameters.nEngRefMin);
 	Serial.print(" ");
-	Serial.print(conversions.nEngRefMax);
+	Serial.print(parameters.nEngRefMax);
 	Serial.print('\n');
 }
 
@@ -259,13 +259,13 @@ void handleCommand(uint8_t rxBuf[])
 		// Set conversion parameters
 		if(nData == 7)
 		{
-			conversions.servoK 			= data[0];
-			conversions.servoM 			= data[1];
-			conversions.potK 			= data[2];
-			conversions.potM 			= data[3];
-			conversions.aFiltServo_f 	= data[4];
-			conversions.aFiltPot_f 		= data[5];
-			conversions.aFiltNEng_f		= data[6];
+			parameters.servoADMax 		= data[0];
+			parameters.servoADMin 		= data[1];
+			parameters.potADMax 		= data[2];
+			parameters.potADMin 		= data[3];
+			parameters.aFiltServo_f 	= data[4];
+			parameters.aFiltPot_f 		= data[5];
+			parameters.aFiltNEng_f		= data[6];
 			Serial.println("OK");
 		}
 		else

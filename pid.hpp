@@ -6,7 +6,7 @@ class PID
 public:
   PID();
   void init();
-  bool calculate(double ref, double in);
+  void calculate(double ref, double in);
   double getOutput();
   void debugPrint(double, double);
   void setPGain(double);
@@ -14,6 +14,7 @@ public:
   void setDGain(double);
   void setUMax(double);
   void setUMin(double);
+  void setIPart(double);
 
   double getPGain();
   double getIGain();
