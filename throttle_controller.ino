@@ -242,7 +242,7 @@ void calculate()
     {
       modeNext_e = OFF;
     }
-    break;
+    	break;
     case START:
     // In this mode, wait for "kickdown", that is that the throttle is pushed
     // to 100%
@@ -253,6 +253,10 @@ void calculate()
     {
       modeNext_e = KICKDOWN;
     }
+    else if(status.nEngStatus_e != OK)
+    {
+    	modeNext_e = OFF;
+    }
     break;
     case KICKDOWN:
     // In this state, wait for the throttle (and pot) to be released below
@@ -260,6 +264,10 @@ void calculate()
     if(status.potInCabFilt_f<parameters.potKickdownReset_u16)
     {
       modeNext_e = NORMAL;
+    }
+    else if(status.nEngStatus_e != OK)
+    {
+    	modeNext_e = OFF;
     }
     break;
     case NORMAL:
