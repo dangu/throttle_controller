@@ -21,8 +21,8 @@ void wInterrupt();
 #define REF_IN    0
 #define W_INTERRUPT 0
 
-#define N_ENG_MIN             400  //!< [rpm] Min allowed engine speed
-#define N_ENG_MAX             2400 //!< [rpm] Max allowed engine speed
+#define N_ENG_MIN             500  //!< [rpm] Min allowed engine speed
+#define N_ENG_MAX             2700 //!< [rpm] Max allowed engine speed
 #define N_ENG_MAX_SAMPLED     3000 //!< [rpm] Max realistically sampled engine speed
 #define N_ENG_MAX_SAMPLE_AGE  1000 //!< [ms] max age of engine speed measurement
 
@@ -131,16 +131,17 @@ void setup() {
   pid_servo.init();
   pid_servo.setPGain(15.0);
   pid_n_eng.init();
-  pid_n_eng.setPGain(0.1);
+  pid_n_eng.setPGain(0.05);
   pid_n_eng.setIGain(0.1);
   pid_n_eng.setUMin(0.0);
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
+  // Pot max: 920
   parameters.servoADMax_u16 	  = 300;
   parameters.servoADMin_u16 	  = 900;
   parameters.potADMax_u16 		  = 1024;
-  parameters.potADMin_u16 		  = 800;
+  parameters.potADMin_u16 		  = 600;
   parameters.aFiltServo_f 	      = 0.5;
   parameters.aFiltPot_f 	      = 0.1;
   parameters.aFiltNEng_f	      = 0.1;
@@ -153,7 +154,7 @@ void setup() {
   // Setup value conversions
   convServoPos.calcKM(parameters.servoADMax_u16, parameters.servoADMin_u16, 100, 0);
   convPot.calcKM(parameters.potADMax_u16, parameters.potADMin_u16, 100, 0);
-  convNEngRef.calcKM(100, 0, 2000, 500);
+  convNEngRef.calcKM(100, 0, 3000, 500);
 
   // Setup task timers
   taskTimerMain.init();
@@ -274,7 +275,7 @@ void calculate()
     // No engine speed is measured. Go to mode OFF
     if(status.nEngStatus_e == TOO_OLD)
     {
-      status.mode_e = OFF;
+      modeNext_e = OFF;
     }
     else
     {

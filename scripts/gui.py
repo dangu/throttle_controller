@@ -264,7 +264,7 @@ class Gui(tk.Frame):
         self.scaleServoPosVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scaleServoPosVirtual.grid(row=3, column=5)
       
-        self.scalePotVirtual = tk.Scale(frameAD,  from_=2500, to=0, length=settings.scalesLength)
+        self.scalePotVirtual = tk.Scale(frameAD,  from_=100, to=0, length=settings.scalesLength)
         self.scalePotVirtual.grid(row=3, column=6)
 
         self.servoOutput = tk.Scale(frameAD,  from_=100, to=-100, length=settings.scalesLength, tickinterval=50)
