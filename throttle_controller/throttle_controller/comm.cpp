@@ -9,9 +9,6 @@ extern parameters_t parameters;
 extern PID pid_servo;
 extern PID pid_n_eng;
 
-extern Converter convServoPos;
-extern Converter convPot;
-
 #define CMD_ENABLE_EXT_N_ENG_REF	'a'
 #define CMD_DISABLE_EXT_N_ENG_REF	'b'
 #define CMD_ENABLE_EXT_SERVO_POS	'c'
@@ -60,10 +57,6 @@ void displayValues()
 {
 	Serial.print(RESP_DISP_VALUES);
 	Serial.print(" ");
-	Serial.print((int)status.mode_e);
-	Serial.print(" ");
-	Serial.print((int)status.nEngStatus_e);
-	Serial.print(" ");
 	Serial.print(status.nEngRef_u16);
 	Serial.print(" ");
 	Serial.print(status.nEng_f);
@@ -87,13 +80,13 @@ void displayConversionParams()
 {
 	Serial.print(RESP_DISP_CONVERSION_PARAMS);
 	Serial.print(" ");
-	Serial.print(parameters.servoADMax_u16);
+	Serial.print(parameters.servoADMax);
 	Serial.print(" ");
-	Serial.print(parameters.servoADMin_u16);
+	Serial.print(parameters.servoADMin);
 	Serial.print(" ");
-	Serial.print(parameters.potADMax_u16);
+	Serial.print(parameters.potADMax);
 	Serial.print(" ");
-	Serial.print(parameters.potADMin_u16);
+	Serial.print(parameters.potADMin);
 	Serial.print(" ");
 	Serial.print(parameters.aFiltServo_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
@@ -266,17 +259,13 @@ void handleCommand(uint8_t rxBuf[])
 		// Set conversion parameters
 		if(nData == 7)
 		{
-			parameters.servoADMax_u16	= data[0];
-			parameters.servoADMin_u16	= data[1];
-			parameters.potADMax_u16		= data[2];
-			parameters.potADMin_u16		= data[3];
+			parameters.servoADMax 		= data[0];
+			parameters.servoADMin 		= data[1];
+			parameters.potADMax 		= data[2];
+			parameters.potADMin 		= data[3];
 			parameters.aFiltServo_f 	= data[4];
 			parameters.aFiltPot_f 		= data[5];
 			parameters.aFiltNEng_f		= data[6];
-
-			// Calculate new kx+m parameters
-			convServoPos.calcKM(parameters.servoADMax_u16, parameters.servoADMin_u16, 100, 0);
-			convPot.calcKM(parameters.potADMax_u16, parameters.potADMin_u16, 100, 0);
 			Serial.println("OK");
 		}
 		else
