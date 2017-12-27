@@ -62,6 +62,8 @@ void displayValues()
 	Serial.print(" ");
 	Serial.print((int)status.mode_e);
 	Serial.print(" ");
+	Serial.print((int)status.nEngStatus_e);
+	Serial.print(" ");
 	Serial.print(status.nEngRef_u16);
 	Serial.print(" ");
 	Serial.print(status.nEng_f);
@@ -85,13 +87,13 @@ void displayConversionParams()
 {
 	Serial.print(RESP_DISP_CONVERSION_PARAMS);
 	Serial.print(" ");
-	Serial.print(parameters.servoADMax);
+	Serial.print(parameters.servoADMax_u16);
 	Serial.print(" ");
-	Serial.print(parameters.servoADMin);
+	Serial.print(parameters.servoADMin_u16);
 	Serial.print(" ");
-	Serial.print(parameters.potADMax);
+	Serial.print(parameters.potADMax_u16);
 	Serial.print(" ");
-	Serial.print(parameters.potADMin);
+	Serial.print(parameters.potADMin_u16);
 	Serial.print(" ");
 	Serial.print(parameters.aFiltServo_f,DECIMALS_IN_DISPLAY);
 	Serial.print(" ");
@@ -264,17 +266,17 @@ void handleCommand(uint8_t rxBuf[])
 		// Set conversion parameters
 		if(nData == 7)
 		{
-			parameters.servoADMax 		= data[0];
-			parameters.servoADMin 		= data[1];
-			parameters.potADMax 		= data[2];
-			parameters.potADMin 		= data[3];
+			parameters.servoADMax_u16	= data[0];
+			parameters.servoADMin_u16	= data[1];
+			parameters.potADMax_u16		= data[2];
+			parameters.potADMin_u16		= data[3];
 			parameters.aFiltServo_f 	= data[4];
 			parameters.aFiltPot_f 		= data[5];
 			parameters.aFiltNEng_f		= data[6];
 
 			// Calculate new kx+m parameters
-			convServoPos.calcKM(400, 800, 100, 0);
-			convPot.calcKM(1024, 800, 100, 0);
+			convServoPos.calcKM(parameters.servoADMax_u16, parameters.servoADMin_u16, 100, 0);
+			convPot.calcKM(parameters.potADMax_u16, parameters.potADMin_u16, 100, 0);
 			Serial.println("OK");
 		}
 		else

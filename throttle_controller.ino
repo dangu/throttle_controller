@@ -137,10 +137,10 @@ void setup() {
   pid_n_eng.setUMax(100.0);
 
   // Setup conversion parameters
-  parameters.servoADMax 		  = 400;
-  parameters.servoADMin 		  = 800;
-  parameters.potADMax 			  = 1024;
-  parameters.potADMin 			  = 800;
+  parameters.servoADMax_u16 	  = 300;
+  parameters.servoADMin_u16 	  = 900;
+  parameters.potADMax_u16 		  = 1024;
+  parameters.potADMin_u16 		  = 800;
   parameters.aFiltServo_f 	      = 0.5;
   parameters.aFiltPot_f 	      = 0.1;
   parameters.aFiltNEng_f	      = 0.1;
@@ -151,8 +151,8 @@ void setup() {
   parameters.servoPosStart_u16    = 35;
   
   // Setup value conversions
-  convServoPos.calcKM(400, 800, 100, 0);
-  convPot.calcKM(1024, 800, 100, 0);
+  convServoPos.calcKM(parameters.servoADMax_u16, parameters.servoADMin_u16, 100, 0);
+  convPot.calcKM(parameters.potADMax_u16, parameters.potADMin_u16, 100, 0);
   convNEngRef.calcKM(100, 0, 2000, 500);
 
   // Setup task timers

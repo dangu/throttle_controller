@@ -54,10 +54,10 @@ typedef struct {
 }status_t;
 
 typedef struct {
-  float		servoADMax;             //!< Max A/D value for servo
-  float		servoADMin;             //!< Min A/D value for servo
-  float		potADMax;               //!< Max A/D value for pot
-  float		potADMin;	            //!< Min A/D value for pot
+  uint16_t	servoADMax_u16;         //!< Max A/D value for servo
+  uint16_t	servoADMin_u16;         //!< Min A/D value for servo
+  uint16_t	potADMax_u16;           //!< Max A/D value for pot
+  uint16_t	potADMin_u16;	        //!< Min A/D value for pot
   float		aFiltServo_f;           //!< Filter constant servo
   float		aFiltPot_f;             //!< Filter constant pot
   float		aFiltNEng_f;            //!< Filter constant engine speed
