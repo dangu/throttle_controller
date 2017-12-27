@@ -186,34 +186,40 @@ class Gui(tk.Frame):
 
  
         # RPM data
+        labelMode = tk.Label(frameScales, text="Mode")
+        labelMode.grid(row=0, column=0, sticky="nsew")
+        
         labelScaleExtNEngRef = tk.Label(frameScales, text="Ext Target RPM")
-        labelScaleExtNEngRef.grid(row=0, column=0, sticky="nsew")
+        labelScaleExtNEngRef.grid(row=0, column=1, sticky="nsew")
 
         labelScaleNEngRef = tk.Label(frameScales, text="Target RPM")
-        labelScaleNEngRef.grid(row=0, column=1, sticky="nsew")
+        labelScaleNEngRef.grid(row=0, column=2, sticky="nsew")
         
         labelScaleRpmMeasured = tk.Label(frameScales, text="Measured RPM")
-        labelScaleRpmMeasured.grid(row=0, column=2, sticky="nsew")
+        labelScaleRpmMeasured.grid(row=0, column=3, sticky="nsew")
                 
         self.nEngRefOverrideFlag = tk.IntVar()
         checkboxNEngOverride = tk.Checkbutton(frameScales, text="Override", var=self.nEngRefOverrideFlag, command=self.cbNEngRefOverride)
-        checkboxNEngOverride.grid(row=1, column=0, sticky="nsew")
+        checkboxNEngOverride.grid(row=1, column=1, sticky="nsew")
 
         btnUpdateData = tk.Button(frameScales, text="Display Data", command=self.cbDisplayData)
-        btnUpdateData.grid(row=1, column=1, sticky="nsew", padx=2, pady=2)
+        btnUpdateData.grid(row=1, column=2, sticky="nsew", padx=2, pady=2)
 
 
-             
+        self.scaleMode = tk.Scale(frameScales,  from_=3, to=0, length=settings.scalesLength, tickinterval=1)
+        self.scaleMode.set(0)
+        self.scaleMode.grid(row=2, column=0)
+                     
         self.scaleExtNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, tickinterval=500)
         self.scaleExtNEngRef.set(settings.rpmStart)
-        self.scaleExtNEngRef.grid(row=2, column=0)
+        self.scaleExtNEngRef.grid(row=2, column=1)
 
         self.scaleNEngRef = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength)
         self.scaleNEngRef.set(settings.rpmStart)
-        self.scaleNEngRef.grid(row=2, column=1)
+        self.scaleNEngRef.grid(row=2, column=2)
                  
         self.scaleRpmMeasured = tk.Scale(frameScales,  from_=settings.rpmMax, to=settings.rpmMin, length=settings.scalesLength, command = self.cbScale1)
-        self.scaleRpmMeasured.grid(row=2, column=2)
+        self.scaleRpmMeasured.grid(row=2, column=3)
  
         # A/D converter
         labelScaleServoPosMeasured = tk.Label(frameAD, text="Servo measured")
@@ -370,13 +376,14 @@ class Gui(tk.Frame):
                             spinbox.insert(tk.END,"{:g}".format(float(respList[i])))
                             i+=1
                 elif cmd == RESP_DISP_VALUES:
-                    if len(respList) == (1+8):
+                    if len(respList) == (1+9):
                         #print "Data: {}".format(respList[1:])
                         f1=open("log.txt", "a")
                         f1.write(response)
                         f1.close()
                         i=1
-                        for scale in [self.scaleNEngRef,
+                        for scale in [self.scaleMode,
+                                      self.scaleNEngRef,
                                       self.scaleRpmMeasured,
                                       self.scaleServoPosMeasured,
                                       self.scalePotMeasured,

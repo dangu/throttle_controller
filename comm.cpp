@@ -60,6 +60,8 @@ void displayValues()
 {
 	Serial.print(RESP_DISP_VALUES);
 	Serial.print(" ");
+	Serial.print((int)status.mode_e);
+	Serial.print(" ");
 	Serial.print(status.nEngRef_u16);
 	Serial.print(" ");
 	Serial.print(status.nEng_f);
