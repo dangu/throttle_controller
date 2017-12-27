@@ -231,30 +231,6 @@ class Gui(tk.Frame):
         labelScalePotVirtual.grid(row=0, column=6, sticky="nsew")
         labelScalePotVirtual = tk.Label(frameAD, text="Servo output")
         labelScalePotVirtual.grid(row=0, column=7, sticky="nsew")            
-        labelMin = tk.Label(frameAD, text="Min")
-        labelMin.grid(row=1, column=0, sticky="nsew")
-        labelMax = tk.Label(frameAD, text="Max")
-        labelMax.grid(row=2, column=0, sticky="nsew")
-                
-        self.spinServoMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbServoKM)
-        self.spinServoMinAD.grid(row=1, column=1, sticky="e")
-        self.spinServoMinAD.delete(0,"end")
-        self.spinServoMinAD.insert(tk.END,"0")
-
-        self.spinServoMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbServoKM)
-        self.spinServoMaxAD.grid(row=2, column=1, sticky="e")
-        self.spinServoMaxAD.delete(0,"end")
-        self.spinServoMaxAD.insert(tk.END,"0")
-        
-        self.spinPotMinAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbPotKM)
-        self.spinPotMinAD.grid(row=1, column=2, sticky="e")
-        self.spinPotMinAD.delete(0,"end")
-        self.spinPotMinAD.insert(tk.END,"0")
-
-        self.spinPotMaxAD = tk.Spinbox(frameAD, width=spinboxWidth, from_=0, to=1023, increment=1, command=self.cbPotKM)
-        self.spinPotMaxAD.grid(row=2, column=2, sticky="e")
-        self.spinPotMaxAD.delete(0,"end")
-        self.spinPotMaxAD.insert(tk.END,"0")
           
         self.scaleServoPosMeasured = tk.Scale(frameAD,  from_=1023, to=0, length=settings.scalesLength, tickinterval=256, command = self.cbScale1)
         self.scaleServoPosMeasured.grid(row=3, column=1)
@@ -296,40 +272,34 @@ class Gui(tk.Frame):
         labelPot = tk.Label(frameConvert, text="nEng")
         labelPot.grid(row=3, column=0, sticky="nsew")
                 
-        labelK = tk.Label(frameConvert, text="k")
+        labelK = tk.Label(frameConvert, text="Min")
         labelK.grid(row=0, column=1, sticky="nsew")
         
-        labelX = tk.Label(frameConvert, text="m")
+        labelX = tk.Label(frameConvert, text="Max")
         labelX.grid(row=0, column=2, sticky="nsew")
 
         labelAFilt = tk.Label(frameConvert, text="Filter constant")
         labelAFilt.grid(row=0, column=3, sticky="nsew")
-
-        labelNEngRefMin = tk.Label(frameConvert, text="Min")
-        labelNEngRefMin.grid(row=0, column=4, sticky="nsew")
         
-        labelNEngRefMax = tk.Label(frameConvert, text="Max")
-        labelNEngRefMax.grid(row=0, column=5, sticky="nsew")
+        self.spinServoADMin = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinServoADMin.grid(row=1, column=1, sticky="e")
+        self.spinServoADMin.delete(0,"end")
+        self.spinServoADMin.insert(tk.END,"0")
         
-        self.spinServoK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
-        self.spinServoK.grid(row=1, column=1, sticky="e")
-        self.spinServoK.delete(0,"end")
-        self.spinServoK.insert(tk.END,"0")
+        self.spinServoADMax = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinServoADMax.grid(row=1, column=2, sticky="e")
+        self.spinServoADMax.delete(0,"end")
+        self.spinServoADMax.insert(tk.END,"0")
         
-        self.spinServoM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
-        self.spinServoM.grid(row=1, column=2, sticky="e")
-        self.spinServoM.delete(0,"end")
-        self.spinServoM.insert(tk.END,"0")
+        self.spinPotADMin = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinPotADMin.grid(row=2, column=1, sticky="e")
+        self.spinPotADMin.delete(0,"end")
+        self.spinPotADMin.insert(tk.END,"0")
         
-        self.spinPotK = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
-        self.spinPotK.grid(row=2, column=1, sticky="e")
-        self.spinPotK.delete(0,"end")
-        self.spinPotK.insert(tk.END,"0")
-        
-        self.spinPotM = tk.Spinbox(frameConvert, width=spinboxWidth, from_=-1000, to=1000, increment=0.1)
-        self.spinPotM.grid(row=2, column=2, sticky="e")
-        self.spinPotM.delete(0,"end")
-        self.spinPotM.insert(tk.END,"0") 
+        self.spinPotADMax = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1023, increment=1)
+        self.spinPotADMax.grid(row=2, column=2, sticky="e")
+        self.spinPotADMax.delete(0,"end")
+        self.spinPotADMax.insert(tk.END,"0") 
 
         self.spinAFiltServo = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=1, increment=0.1)
         self.spinAFiltServo.grid(row=1, column=3, sticky="e")
@@ -347,12 +317,12 @@ class Gui(tk.Frame):
         self.spinAFiltNEng.insert(tk.END,"0")  
 
         self.spinNEngRefMin = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=2400, increment=1)
-        self.spinNEngRefMin.grid(row=3, column=4, sticky="e")
+        self.spinNEngRefMin.grid(row=3, column=1, sticky="e")
         self.spinNEngRefMin.delete(0,"end")
         self.spinNEngRefMin.insert(tk.END,"0")  
         
         self.spinNEngRefMax = tk.Spinbox(frameConvert, width=spinboxWidth, from_=0, to=2400, increment=1)
-        self.spinNEngRefMax.grid(row=3, column=5, sticky="e")
+        self.spinNEngRefMax.grid(row=3, column=2, sticky="e")
         self.spinNEngRefMax.delete(0,"end")
         self.spinNEngRefMax.insert(tk.END,"0")     
                                    
@@ -421,10 +391,10 @@ class Gui(tk.Frame):
                     if len(respList) == (1+9):
                         i=1
                         print "Data: {}".format(respList[1:])
-                        for spinbox in [self.spinServoK,
-                                        self.spinServoM,
-                                        self.spinPotK,
-                                        self.spinPotM,
+                        for spinbox in [self.spinServoADMax,
+                                        self.spinServoADMin,
+                                        self.spinPotADMax,
+                                        self.spinPotADMin,
                                         self.spinAFiltServo,
                                         self.spinAFiltPot,
                                         self.spinAFiltNEng,
@@ -537,10 +507,10 @@ class Gui(tk.Frame):
         if self.serialPort.isOpen():
             print "Write conversion parameters"
             cmd = "{} {} {} {} {} {} {} {}\n".format(CMD_SET_CONVERSION_PARAMS,
-                                            self.spinServoK.get(),
-                                            self.spinServoM.get(),
-                                            self.spinPotK.get(),
-                                            self.spinPotM.get(),
+                                            self.spinServoADMax.get(),
+                                            self.spinServoADMin.get(),
+                                            self.spinPotADMax.get(),
+                                            self.spinPotADMin.get(),
                                             self.spinAFiltServo.get(),
                                             self.spinAFiltPot.get(),
                                             self.spinAFiltNEng.get())
@@ -560,14 +530,6 @@ class Gui(tk.Frame):
             if(not self.servoPosRefOverrideFlag.get()):
                 cmd = "{}\n".format(CMD_DISABLE_EXT_SERVO_POS)
                 self.serialPort.writeQueued(cmd)
-                
-    def cbServoKM(self):
-        """Calculate the kx+m parameters for servo"""
-        print "cbServoKM"
-        
-    def cbPotKM(self):
-        """Calculate the kx+m parameters for pot"""
-        print "cbPotKM"
         
         
 def run():

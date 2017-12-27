@@ -261,6 +261,7 @@ void calculate()
     {
       modeNext_e = NORMAL;
     }
+    break;
     case NORMAL:
     // No engine speed is measured. Go to mode OFF
     if(status.nEngStatus_e == TOO_OLD)

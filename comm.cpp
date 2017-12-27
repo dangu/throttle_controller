@@ -9,6 +9,9 @@ extern parameters_t parameters;
 extern PID pid_servo;
 extern PID pid_n_eng;
 
+extern Converter convServoPos;
+extern Converter convPot;
+
 #define CMD_ENABLE_EXT_N_ENG_REF	'a'
 #define CMD_DISABLE_EXT_N_ENG_REF	'b'
 #define CMD_ENABLE_EXT_SERVO_POS	'c'
@@ -266,6 +269,10 @@ void handleCommand(uint8_t rxBuf[])
 			parameters.aFiltServo_f 	= data[4];
 			parameters.aFiltPot_f 		= data[5];
 			parameters.aFiltNEng_f		= data[6];
+
+			// Calculate new kx+m parameters
+			convServoPos.calcKM(400, 800, 100, 0);
+			convPot.calcKM(1024, 800, 100, 0);
 			Serial.println("OK");
 		}
 		else
